@@ -44,6 +44,7 @@
         .title-header {
             text-align: center;
             padding: 8px 0 12px;
+            position: relative;
         }
         .main-title {
             font-family: 'Cinzel', serif;
@@ -60,16 +61,40 @@
             margin-top: 4px;
             letter-spacing: 3px;
         }
+        .btn-reset-test {
+            position: absolute;
+            right: 0;
+            top: 6px;
+            background: rgba(88, 28, 135, 0.5);
+            border: 1px solid #a855f7;
+            color: #d8b4fe;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
 
-        /* 進度條 */
+        /* 進度條 / 獎勵領取浮動橫幅 */
         .progress-bar {
             background: rgba(35, 11, 65, 0.9);
             border: 1px solid var(--purple-border);
             border-radius: 10px;
-            padding: 8px 12px;
+            padding: 10px 12px;
             margin-bottom: 14px;
             text-align: center;
             box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+            transition: 0.3s;
+        }
+        .progress-bar.reward-ready {
+            background: linear-gradient(90deg, rgba(88, 28, 135, 0.95), rgba(180, 83, 9, 0.95));
+            border-color: #ffd700;
+            box-shadow: 0 0 18px rgba(251, 191, 36, 0.6);
+            cursor: pointer;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); }
+            50% { transform: scale(1.02); box-shadow: 0 0 25px rgba(251, 191, 36, 0.9); }
         }
         .progress-text {
             color: var(--gold-glow);
@@ -82,45 +107,31 @@
             margin-top: 2px;
         }
 
-        /* 📜 真正的 2D 冒險羊皮紙大地圖畫布 📜 */
+        /* 📜 2D 冒險羊皮紙大地圖畫布 📜 */
         .rpg-map-canvas {
             width: 100%;
-            height: 380px;
+            height: 420px;
             background: #edd8b4;
             background-image: 
-                radial-gradient(circle, rgba(248, 238, 217, 0.95) 0%, rgba(214, 185, 137, 0.98) 100%),
-                repeating-linear-gradient(45deg, rgba(80, 50, 20, 0.04) 0px, rgba(80, 50, 20, 0.04) 2px, transparent 2px, transparent 6px);
+                radial-gradient(circle, rgba(248, 238, 217, 0.96) 0%, rgba(206, 172, 120, 0.98) 100%),
+                repeating-linear-gradient(45deg, rgba(80, 50, 20, 0.03) 0px, rgba(80, 50, 20, 0.03) 2px, transparent 2px, transparent 6px);
             border: 4px double #5c3514;
             border-radius: 16px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 45px rgba(92, 53, 20, 0.45);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(92, 53, 20, 0.55);
             position: relative;
             overflow: hidden;
             margin-bottom: 16px;
         }
 
-        /* 地圖背景裝飾符文與羅盤 */
-        .compass-rose {
+        .map-art-layer {
             position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 50px;
-            height: 50px;
-            opacity: 0.25;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            z-index: 1;
         }
-        .map-watermark {
-            position: absolute;
-            bottom: 12px;
-            left: 14px;
-            font-family: 'Cinzel', serif;
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: #6d421e;
-            font-weight: 800;
-            opacity: 0.6;
-        }
-
-        /* SVG 魔法路徑線 */
         .map-trails {
             position: absolute;
             top: 0;
@@ -128,16 +139,16 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            z-index: 2;
         }
         .trail-path {
-            stroke: #8b5a2b;
-            stroke-width: 3;
+            stroke: #8b3a12;
+            stroke-width: 3.5;
             stroke-dasharray: 6, 6;
             fill: none;
-            opacity: 0.75;
         }
 
-        /* 📍 地圖上的奇幻據點點位 (Marker Pin) */
+        /* 據點點位 */
         .map-node {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -152,14 +163,13 @@
             transform: translate(-50%, -50%) scale(1.15);
         }
 
-        /* 據點徽章造型 */
         .node-pin {
             width: 44px;
             height: 44px;
             border-radius: 50%;
             background: radial-gradient(circle, #2d0b4e 0%, #0c0217 100%);
             border: 3px solid #ffd700;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.9), 0 4px 8px rgba(0,0,0,0.6);
+            box-shadow: 0 0 16px rgba(251, 191, 36, 0.95), 0 4px 10px rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -169,34 +179,31 @@
             color: #ffd700;
             transition: 0.3s;
         }
-        /* 已集點的封蠟印章效果 */
         .map-node.stamped .node-pin {
             background: radial-gradient(circle, #064e3b 0%, #022c22 100%);
             border-color: #4ade80;
             color: #4ade80;
-            box-shadow: 0 0 16px rgba(74, 222, 128, 0.9);
+            box-shadow: 0 0 18px rgba(74, 222, 128, 0.95);
         }
 
-        /* 據點下方標籤 */
         .node-label {
-            background: rgba(18, 5, 34, 0.92);
+            background: rgba(18, 5, 34, 0.95);
             color: #fef08a;
-            border: 1px solid #caa472;
+            border: 1px solid #eab308;
             padding: 3px 8px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 900;
             margin-top: 4px;
             white-space: nowrap;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-            letter-spacing: 0.5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         }
         .map-node.stamped .node-label {
             border-color: #4ade80;
             color: #86efac;
         }
 
-        /* 📜 底部彈出之「據點詳細卷軸」 */
+        /* 據點詳細卷軸 */
         .detail-card {
             background: #170928;
             border: 2px solid var(--purple-border);
@@ -230,7 +237,6 @@
             line-height: 1.4;
         }
 
-        /* 導航按鈕 */
         .btn-navigation {
             display: flex;
             align-items: center;
@@ -249,7 +255,6 @@
             letter-spacing: 1px;
         }
 
-        /* 核銷區塊 */
         .verify-group {
             display: flex;
             gap: 6px;
@@ -265,11 +270,6 @@
             text-align: center;
             letter-spacing: 3px;
         }
-        .pin-input:focus {
-            outline: none;
-            border-color: #ffd700;
-            box-shadow: 0 0 10px #ffd700;
-        }
         .btn-verify {
             flex: 1;
             padding: 10px;
@@ -283,7 +283,6 @@
             box-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
         }
 
-        /* 已蓋章完成狀態 */
         .stamped-banner {
             text-align: center;
             padding: 10px;
@@ -297,7 +296,6 @@
             text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
         }
 
-        /* 啟用卡牌 */
         .activation-card {
             background: #170928;
             border: 2px solid var(--purple-border);
@@ -308,19 +306,100 @@
             margin-top: 30px;
         }
 
+        /* 🏆 榮譽獎勵彈窗 🏆 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        .reward-card {
+            background: linear-gradient(160deg, #240a3e 0%, #0d0218 100%);
+            border: 3px solid #ffd700;
+            border-radius: 20px;
+            padding: 24px 18px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 0 35px rgba(251, 191, 36, 0.7), inset 0 0 20px rgba(168, 85, 247, 0.4);
+            animation: modal-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modal-appear {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .reward-icon {
+            font-size: 52px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8));
+        }
+        .reward-badge-title {
+            color: #ffd700;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 0 0 8px 0;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+        }
+        .reward-item-box {
+            background: rgba(88, 28, 135, 0.5);
+            border: 2px dashed #ffd700;
+            border-radius: 12px;
+            padding: 14px;
+            margin: 14px 0;
+        }
+        .reward-item-name {
+            font-size: 19px;
+            font-weight: 900;
+            color: #fef08a;
+            letter-spacing: 1px;
+        }
+        .reward-tip {
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        .btn-claim {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #d97706, #fbbf24);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 900;
+            font-size: 16px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            margin-bottom: 8px;
+        }
+        .btn-close-modal {
+            background: transparent;
+            border: none;
+            color: #a855f7;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="map-wrapper">
-        <!-- 頂部標題 -->
         <div class="title-header">
             <h1 class="main-title">✨ 桿道夫魔法地圖 ✨</h1>
-            <div class="sub-title">點擊地圖據點 ‧ 開啟特權探索</div>
+            <div class="sub-title">秘境試煉 ‧ 探索啟程</div>
+            <button class="btn-reset-test" onclick="resetTestState()">🔄 重設測試</button>
         </div>
 
-        <!-- 載入中 -->
         <div id="loading" style="text-align:center; padding: 40px 10px; color:#c084fc; font-size:16px;">
             正在感應公會魔力航道...
         </div>
@@ -335,40 +414,94 @@
             <div id="activationMsg" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
         </div>
 
-        <!-- 正式地圖探索世界 -->
+        <!-- 2D 探索地圖區 -->
         <div id="mapSection" class="hidden">
-            <!-- 進度條 -->
-            <div class="progress-bar">
+            <div class="progress-bar" id="progressBar" onclick="checkAndOpenReward()">
                 <div class="progress-text" id="stampCountText">探索進度：已集點 0 / 3 間據點</div>
-                <div class="progress-sub">✦ 點擊地圖上的金色圓點，可切換據點導航與核銷 ✦</div>
+                <div class="progress-sub" id="stampSubText">✦ 點擊地圖上的金色圓點，可切換據點導航與現場核銷 ✦</div>
             </div>
 
-            <!-- 📜 2D 奇幻冒險大地圖 📜 -->
             <div class="rpg-map-canvas" id="mapCanvas">
-                <!-- 羅盤與水印 -->
-                <svg class="compass-rose" viewBox="0 0 100 100">
-                    <polygon points="50,0 58,42 100,50 58,58 50,100 42,58 0,50 42,42" fill="#5c3514" />
-                    <circle cx="50" cy="50" r="10" fill="#edd8b4" stroke="#5c3514" stroke-width="3" />
+                <svg class="map-art-layer" viewBox="0 0 400 420" preserveAspectRatio="none">
+                    <g transform="translate(345, 45) scale(0.65)" stroke="#6b3f1e" stroke-width="1.5" fill="none" opacity="0.45">
+                        <circle cx="0" cy="0" r="28" stroke-dasharray="3,3" />
+                        <polygon points="0,-36 6,-10 0,-15 -6,-10" fill="#6b3f1e" />
+                        <polygon points="0,36 6,10 0,15 -6,10" fill="#6b3f1e" />
+                        <polygon points="36,0 10,6 15,0 10,-6" fill="#6b3f1e" />
+                        <polygon points="-36,0 -10,6 -15,0 -10,-6" fill="#6b3f1e" />
+                        <text x="0" y="-40" text-anchor="middle" font-size="12" font-family="'Cinzel', serif" font-weight="bold" fill="#6b3f1e">N</text>
+                    </g>
+                    <g stroke="#532d15" stroke-width="1.6" fill="#dfbe8b" opacity="0.8">
+                        <path d="M 230,120 Q 280,105 340,125 L 340,135 L 220,135 Z" fill="#cfa570" />
+                        <rect x="250" y="55" width="60" height="40" rx="2" />
+                        <rect x="238" y="35" width="18" height="60" rx="2" />
+                        <polygon points="247,10 234,35 260,35" fill="#9c2727" stroke="#532d15" />
+                        <rect x="302" y="28" width="22" height="68" rx="2" />
+                        <polygon points="313,2 298,28 328,28" fill="#9c2727" stroke="#532d15" />
+                        <path d="M 272,95 A 8,8 0 0,1 288,95 Z" fill="#4a2612" />
+                        <text x="280" y="112" font-size="10" font-family="'Noto Serif TC', serif" font-weight="900" fill="#6d3917" letter-spacing="1">公會城堡</text>
+                    </g>
+                    <g stroke="#4a2612" stroke-width="1.8" opacity="0.85">
+                        <path d="M 10,380 Q 25,290 85,285 Q 140,280 160,350 L 160,420 L 10,420 Z" fill="#c39a67" />
+                        <path d="M 40,385 C 40,325 90,320 95,385 Z" fill="#180a26" stroke="#33180a" stroke-width="2.5" />
+                        <polygon points="50,335 55,348 60,335" fill="#eedbb9" />
+                        <polygon points="68,332 73,352 78,332" fill="#eedbb9" />
+                        <polygon points="82,336 86,346 90,336" fill="#eedbb9" />
+                        <text x="70" y="405" font-size="10" font-family="'Noto Serif TC', serif" font-weight="900" fill="#582a10" letter-spacing="1">暗影洞穴</text>
+                    </g>
+                    <g stroke="#6b3f1e" stroke-width="1.2" fill="#d9b685" opacity="0.6">
+                        <polygon points="80,240 120,180 160,240" />
+                        <polygon points="140,245 175,195 210,245" />
+                        <polygon points="30,225 65,175 100,225" />
+                    </g>
+                    <g stroke="#532d15" stroke-width="1" fill="#784421" opacity="0.6">
+                        <polygon points="145,215 137,235 153,235" />
+                        <polygon points="235,185 227,205 243,205" />
+                        <polygon points="255,195 248,212 262,212" />
+                    </g>
+                    <text x="20" y="30" font-family="'Cinzel', serif" font-size="12" font-weight="900" fill="#6d421e" opacity="0.5" letter-spacing="2">MAP OF ADVENTURE</text>
                 </svg>
-                <div class="map-watermark">MAP OF EXPLORATION</div>
 
-                <!-- 魔法探索虛線軌跡 -->
-                <svg class="map-trails" id="trailsSvg">
-                    <!-- 連接點 1 (精誠路) -> 點 3 (育德路) -> 點 2 (信平路) -->
-                    <path class="trail-path" d="M 90,280 Q 140,190 190,170 T 320,80" />
+                <svg class="map-trails" viewBox="0 0 400 420" preserveAspectRatio="none">
+                    <path class="trail-path" d="M 100,310 Q 150,245 205,210 T 310,105" />
                 </svg>
 
-                <!-- 據點圖釘（由 JS 動態生成在不同座標上） -->
                 <div id="nodesContainer"></div>
             </div>
 
-            <!-- 底部：當前選中店家的詳細卷軸 -->
+            <!-- 底部詳細卷軸 -->
             <div class="detail-card" id="detailCard">
                 <div id="detailContent">
                     <p style="text-align:center; color:#c084fc;">正在展開據點秘卷...</p>
                 </div>
             </div>
         </div>
+
+        <!-- 🏆 獎勵兌換彈窗 🏆 -->
+        <div id="rewardModal" class="modal-overlay hidden">
+            <div class="reward-card">
+                <div class="reward-icon">🎁</div>
+                <h2 class="reward-badge-title">試煉達成 ‧ 榮譽兌換</h2>
+                <p style="color:#d8b4fe; font-size:13px; margin:0;">恭喜冒險者平定 3 處公會據點！</p>
+                
+                <div class="reward-item-box">
+                    <div style="font-size:13px; color:#ffd700; margin-bottom:4px;">✦ 特權達成獎勵 ✦</div>
+                    <div class="reward-item-name">📜 公會專屬檔案夾</div>
+                </div>
+
+                <div class="reward-tip">
+                    請向「桿道夫魔法公會」或合作特約場館工作人員出示此畫面領取實體獎品。
+                </div>
+
+                <div id="rewardActionArea">
+                    <button class="btn-claim" id="btnClaimReward" onclick="claimRewardStaff()">工作人員核銷領取</button>
+                    <div id="rewardClaimMsg" style="font-size:13px; margin-top:6px; font-weight:bold;"></div>
+                </div>
+
+                <button class="btn-close-modal" onclick="closeRewardModal()">稍後再出示 (關閉視窗)</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -382,17 +515,20 @@
             'Content-Type': 'application/json'
         };
 
-        // 3 間店家在 2D 地圖畫布上的座標配置（百分比分佈）
+        const REWARD_NAME = '【初階試煉者：公會專屬檔案夾】';
+
         const NODE_POSITIONS = [
-            { x: 24, y: 74 }, // 據點 1：幻覺博物館（左下方）
-            { x: 80, y: 22 }, // 據點 2：女森創意製作所（右上角）
-            { x: 50, y: 46 }  // 據點 3：三拾叁精品茶飲（中心偏上）
+            { x: 26, y: 74 }, // 據點 1：幻覺博物館
+            { x: 77, y: 25 }, // 據點 2：女森創意製作所
+            { x: 51, y: 50 }  // 據點 3：三拾叁精品茶飲
         ];
 
         let currentUserId = null;
         let merchantsList = [];
         let stampedSet = new Set();
         let selectedMerchantId = null;
+        let isRewardClaimed = false;
+        let rewardClaimedAt = null;
 
         async function initApp() {
             try {
@@ -407,7 +543,7 @@
             } catch (err) {
                 let savedId = localStorage.getItem('gandalf_liff_uid');
                 if (!savedId) {
-                    savedId = 'TEST_LINE_USER_' + Math.floor(1000 + Math.random() * 9000);
+                    savedId = 'TEST_USER_' + Math.floor(1000 + Math.random() * 9000);
                     localStorage.setItem('gandalf_liff_uid', savedId);
                 }
                 currentUserId = savedId;
@@ -423,9 +559,11 @@
 
                 if (list && list.length > 0 && list[0].is_used) {
                     document.getElementById('mapSection').classList.remove('hidden');
+                    document.getElementById('activationSection').classList.add('hidden');
                     loadMapData();
                 } else {
                     document.getElementById('activationSection').classList.remove('hidden');
+                    document.getElementById('mapSection').classList.add('hidden');
                 }
             } catch (e) {
                 document.getElementById('loading').innerText = '魔力樞紐連線異常，請重新整理頁面。';
@@ -461,7 +599,7 @@
                 body: JSON.stringify({ is_used: true, line_user_id: currentUserId, activated_at: new Date().toISOString() })
             });
 
-            msg.innerText = '✨ 啟動成功！正在繪製地圖...';
+            msg.innerText = '✨ 啟動成功！正在展開秘境地圖...';
             msg.style.color = '#4ade80';
 
             setTimeout(() => {
@@ -472,28 +610,61 @@
         }
 
         async function loadMapData() {
-            const [mRes, sRes] = await Promise.all([
+            const [mRes, sRes, rRes] = await Promise.all([
                 fetch(`${API_URL}/merchants?select=*&order=id.asc`, { headers: apiHeaders }),
-                fetch(`${API_URL}/user_stamps?line_user_id=eq.${currentUserId}&select=merchant_id`, { headers: apiHeaders })
+                fetch(`${API_URL}/user_stamps?line_user_id=eq.${currentUserId}&select=merchant_id`, { headers: apiHeaders }),
+                fetch(`${API_URL}/user_rewards?line_user_id=eq.${currentUserId}&reward_name=eq.${encodeURIComponent(REWARD_NAME)}&select=*`, { headers: apiHeaders })
             ]);
 
             merchantsList = await mRes.json();
             const stamps = await sRes.json();
+            const rewards = await rRes.json();
+
             stampedSet = new Set((stamps || []).map(s => s.merchant_id));
 
-            // 更新累積進度
-            document.getElementById('stampCountText').innerText = `探索進度：已集點 ${stamps.length} / ${merchantsList.length} 間據點`;
+            if (rewards && rewards.length > 0) {
+                isRewardClaimed = true;
+                rewardClaimedAt = new Date(rewards[0].claimed_at).toLocaleString();
+            } else {
+                isRewardClaimed = false;
+                rewardClaimedAt = null;
+            }
 
-            // 預設選中第一家
+            // 更新累積進度
+            const stampCount = stamps.length;
+            const totalCount = merchantsList.length;
+            const pBar = document.getElementById('progressBar');
+
+            if (stampCount >= 3) {
+                pBar.classList.add('reward-ready');
+                if (isRewardClaimed) {
+                    document.getElementById('stampCountText').innerHTML = `🌟 試煉達成！獎品已兌換領取`;
+                    document.getElementById('stampSubText').innerHTML = `✦ 已於 ${rewardClaimedAt} 完成實體檔案夾核銷 ✦`;
+                } else {
+                    document.getElementById('stampCountText').innerHTML = `🎉 試煉達成！已集滿 ${stampCount} / ${totalCount} 間據點`;
+                    document.getElementById('stampSubText').innerHTML = `🎁 點此出示領取【公會專屬檔案夾】特權獎勵 ❯`;
+                    
+                    const hasShownModal = sessionStorage.getItem('reward_shown_' + currentUserId);
+                    if (!hasShownModal) {
+                        showRewardModal();
+                        sessionStorage.setItem('reward_shown_' + currentUserId, 'true');
+                    }
+                }
+            } else {
+                pBar.classList.remove('reward-ready');
+                document.getElementById('stampCountText').innerText = `探索進度：已集點 ${stampCount} / ${totalCount} 間據點`;
+                document.getElementById('stampSubText').innerText = `✦ 集滿 3 間據點即可解鎖「公會專屬檔案夾」✦`;
+            }
+
             if (!selectedMerchantId && merchantsList.length > 0) {
                 selectedMerchantId = merchantsList[0].id;
             }
 
             renderMapNodes();
             renderSelectedDetail();
+            updateRewardModalUI();
         }
 
-        // 在 2D 地圖上渲染各個據點標記
         function renderMapNodes() {
             const container = document.getElementById('nodesContainer');
             container.innerHTML = '';
@@ -523,7 +694,6 @@
             renderSelectedDetail();
         }
 
-        // 渲染底部詳細面板
         function renderSelectedDetail() {
             const m = merchantsList.find(item => item.id === selectedMerchantId);
             if (!m) return;
@@ -579,6 +749,90 @@
             msg.innerText = '✨ 核銷成功，地圖印記已點亮！';
             msg.style.color = '#4ade80';
             setTimeout(() => loadMapData(), 500);
+        }
+
+        // 獎勵彈窗控制
+        function showRewardModal() {
+            updateRewardModalUI();
+            document.getElementById('rewardModal').classList.remove('hidden');
+        }
+
+        function closeRewardModal() {
+            document.getElementById('rewardModal').classList.add('hidden');
+        }
+
+        function checkAndOpenReward() {
+            if (stampedSet.size >= 3) {
+                showRewardModal();
+            }
+        }
+
+        function updateRewardModalUI() {
+            const area = document.getElementById('rewardActionArea');
+            if (isRewardClaimed) {
+                area.innerHTML = `
+                    <div style="background:rgba(34,197,94,0.18); border:2px dashed #4ade80; color:#4ade80; padding:12px; border-radius:8px; font-weight:bold; font-size:15px; margin-bottom:8px;">
+                        ✅ 已完成實體核銷兌換<br>
+                        <span style="font-size:12px; color:#cbd5e1;">兌換時間：${rewardClaimedAt}</span>
+                    </div>
+                `;
+            } else {
+                area.innerHTML = `
+                    <button class="btn-claim" id="btnClaimReward" onclick="claimRewardStaff()">工作人員核銷領取</button>
+                    <div id="rewardClaimMsg" style="font-size:13px; margin-top:6px; font-weight:bold;"></div>
+                `;
+            }
+        }
+
+        // 工作人員現場點擊核銷並寫入資料庫
+        async function claimRewardStaff() {
+            if (!confirm('【工作人員核銷確認】\n請確認已現場交付「公會專屬檔案夾」給冒險者？')) {
+                return;
+            }
+
+            const btn = document.getElementById('btnClaimReward');
+            const msg = document.getElementById('rewardClaimMsg');
+            btn.disabled = true;
+            btn.innerText = '正在寫入公會兌換名冊...';
+
+            try {
+                const res = await fetch(`${API_URL}/user_rewards`, {
+                    method: 'POST',
+                    headers: apiHeaders,
+                    body: JSON.stringify({
+                        line_user_id: currentUserId,
+                        reward_name: REWARD_NAME
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    if (err.code === '23505') {
+                        alert('⚠️ 此帳號先前已完成核銷領取，不可重複領取！');
+                    } else {
+                        throw new Error('伺服器記錄失敗');
+                    }
+                    loadMapData();
+                    return;
+                }
+
+                alert('🎉 核銷成功！已記錄於公會兌換數據庫。');
+                loadMapData();
+            } catch (e) {
+                msg.innerText = '❌ 核銷失敗：' + e.message;
+                msg.style.color = '#f87171';
+                btn.disabled = false;
+                btn.innerText = '工作人員核銷領取';
+            }
+        }
+
+        // 重新測試
+        function resetTestState() {
+            if (confirm('確定要重設測試狀態，重新體驗輸入通關密語嗎？')) {
+                localStorage.removeItem('gandalf_liff_uid');
+                sessionStorage.clear();
+                location.reload();
+            }
         }
 
         window.addEventListener('load', initApp);
