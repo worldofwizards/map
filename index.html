@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>桿道夫《魔法地圖》</title>
+    <title>桿道夫《魔法地圖》探索試煉</title>
     <!-- LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,170 +12,225 @@
 
     <style>
         :root {
-            --rift-purple: #9333ea;
-            --rift-glow: #c084fc;
-            --gold-light: #fef08a;
             --gold-bright: #fbbf24;
-            --gold-dark: #b45309;
-            --bg-night: #090312;
+            --gold-glow: #ffd700;
+            --purple-dark: #120524;
+            --purple-border: #7e22ce;
+            --purple-glow: #c084fc;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Noto Serif TC', 'Cinzel', serif;
-            background-color: var(--bg-night);
+            background-color: var(--purple-dark);
             background-image: 
-                radial-gradient(circle at 50% 10%, rgba(147, 51, 234, 0.45) 0%, transparent 60%),
-                radial-gradient(circle at 15% 45%, rgba(192, 132, 252, 0.2) 0%, transparent 40%),
-                radial-gradient(circle at 85% 75%, rgba(245, 158, 11, 0.2) 0%, transparent 50%),
-                linear-gradient(180deg, #090312 0%, #150727 50%, #090312 100%);
+                radial-gradient(circle at 50% 10%, rgba(147, 51, 234, 0.4) 0%, transparent 60%),
+                radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
+                linear-gradient(180deg, #090214 0%, #17072e 50%, #090214 100%);
             color: #f3e8ff;
             margin: 0;
-            padding: 16px 12px 60px;
+            padding: 12px 10px 40px;
             min-height: 100vh;
         }
 
-        .map-board {
-            max-width: 460px;
+        .map-wrapper {
+            max-width: 480px;
             margin: auto;
             position: relative;
         }
 
         /* 頂部標題 */
-        .header-section {
+        .title-header {
             text-align: center;
-            padding: 10px 0 16px;
+            padding: 8px 0 12px;
         }
         .main-title {
             font-family: 'Cinzel', serif;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 900;
+            color: var(--gold-glow);
             letter-spacing: 2px;
-            color: #ffd700;
             text-shadow: 0 0 15px rgba(251, 191, 36, 0.8), 0 0 25px rgba(168, 85, 247, 0.8);
             margin: 0;
         }
         .sub-title {
-            font-size: 13px;
+            font-size: 12px;
             color: #d8b4fe;
-            margin-top: 6px;
+            margin-top: 4px;
             letter-spacing: 3px;
         }
 
-        /* 集點進度追蹤框 */
-        .quest-progress-box {
-            background: rgba(30, 11, 55, 0.85);
-            border: 2px solid #a855f7;
-            box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
-            border-radius: 12px;
-            padding: 12px 14px;
-            margin-bottom: 22px;
+        /* 進度條 */
+        .progress-bar {
+            background: rgba(35, 11, 65, 0.9);
+            border: 1px solid var(--purple-border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-bottom: 14px;
             text-align: center;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
         }
-        .progress-title {
-            color: #ffd700;
-            font-size: 16px;
+        .progress-text {
+            color: var(--gold-glow);
+            font-size: 15px;
             font-weight: 900;
-            letter-spacing: 1px;
         }
-        .progress-desc {
-            font-size: 12px;
+        .progress-sub {
+            font-size: 11px;
             color: #c084fc;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
-        /* 羊皮紙探索畫布 */
-        .parchment-canvas {
-            background: #e8d7b8;
+        /* 📜 真正的 2D 冒險羊皮紙大地圖畫布 📜 */
+        .rpg-map-canvas {
+            width: 100%;
+            height: 380px;
+            background: #edd8b4;
             background-image: 
-                radial-gradient(circle, rgba(248, 239, 219, 0.96) 0%, rgba(216, 189, 142, 0.98) 100%),
-                repeating-linear-gradient(45deg, rgba(80, 50, 20, 0.03) 0px, rgba(80, 50, 20, 0.03) 2px, transparent 2px, transparent 6px);
-            border: 6px double #6b4320;
+                radial-gradient(circle, rgba(248, 238, 217, 0.95) 0%, rgba(214, 185, 137, 0.98) 100%),
+                repeating-linear-gradient(45deg, rgba(80, 50, 20, 0.04) 0px, rgba(80, 50, 20, 0.04) 2px, transparent 2px, transparent 6px);
+            border: 4px double #5c3514;
             border-radius: 16px;
-            padding: 24px 14px 18px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(92, 53, 20, 0.4);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 45px rgba(92, 53, 20, 0.45);
             position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
         }
 
-        .corner-rune {
+        /* 地圖背景裝飾符文與羅盤 */
+        .compass-rose {
             position: absolute;
-            font-size: 14px;
-            color: #6b4320;
-            font-family: 'Cinzel', serif;
-        }
-        .cr-tl { top: 8px; left: 8px; }
-        .cr-tr { top: 8px; right: 8px; }
-        .cr-bl { bottom: 8px; left: 8px; }
-        .cr-br { bottom: 8px; right: 8px; }
-
-        /* 店家拱門卡牌 */
-        .store-card {
-            background: #170928;
-            border: 3px solid #7e22ce;
-            border-radius: 54px 54px 14px 14px;
-            padding: 22px 14px 16px;
-            margin-bottom: 30px;
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(147, 51, 234, 0.4);
-            color: #f3e8ff;
-        }
-        .store-card::before {
-            content: '';
-            position: absolute;
-            top: 4px; left: 4px; right: 4px; bottom: 4px;
-            border: 1px solid rgba(251, 191, 36, 0.35);
-            border-radius: 50px 50px 10px 10px;
+            top: 14px;
+            right: 14px;
+            width: 50px;
+            height: 50px;
+            opacity: 0.25;
             pointer-events: none;
         }
+        .map-watermark {
+            position: absolute;
+            bottom: 12px;
+            left: 14px;
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #6d421e;
+            font-weight: 800;
+            opacity: 0.6;
+        }
 
-        /* 頂部序號圓徽章 */
-        .store-sigil {
-            width: 46px;
-            height: 46px;
-            background: radial-gradient(circle, #3b0764 0%, #090312 100%);
-            border: 2px solid #ffd700;
+        /* SVG 魔法路徑線 */
+        .map-trails {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .trail-path {
+            stroke: #8b5a2b;
+            stroke-width: 3;
+            stroke-dasharray: 6, 6;
+            fill: none;
+            opacity: 0.75;
+        }
+
+        /* 📍 地圖上的奇幻據點點位 (Marker Pin) */
+        .map-node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .map-node:active, .map-node.active {
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        /* 據點徽章造型 */
+        .node-pin {
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            margin: -45px auto 10px auto;
+            background: radial-gradient(circle, #2d0b4e 0%, #0c0217 100%);
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.9), 0 4px 8px rgba(0,0,0,0.6);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Cinzel', serif;
             font-size: 20px;
             font-weight: 900;
             color: #ffd700;
-            box-shadow: 0 0 16px rgba(251, 191, 36, 0.8), 0 0 22px rgba(168, 85, 247, 0.7);
+            transition: 0.3s;
+        }
+        /* 已集點的封蠟印章效果 */
+        .map-node.stamped .node-pin {
+            background: radial-gradient(circle, #064e3b 0%, #022c22 100%);
+            border-color: #4ade80;
+            color: #4ade80;
+            box-shadow: 0 0 16px rgba(74, 222, 128, 0.9);
         }
 
-        /* 店家標題直接呈現 */
-        .store-name {
-            text-align: center;
-            font-size: 22px;
+        /* 據點下方標籤 */
+        .node-label {
+            background: rgba(18, 5, 34, 0.92);
+            color: #fef08a;
+            border: 1px solid #caa472;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 900;
+            margin-top: 4px;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            letter-spacing: 0.5px;
+        }
+        .map-node.stamped .node-label {
+            border-color: #4ade80;
+            color: #86efac;
+        }
+
+        /* 📜 底部彈出之「據點詳細卷軸」 */
+        .detail-card {
+            background: #170928;
+            border: 2px solid var(--purple-border);
+            border-radius: 16px;
+            padding: 18px 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 18px rgba(147, 51, 234, 0.4);
+            position: relative;
+        }
+        .detail-name {
+            font-size: 20px;
             font-weight: 900;
             color: #ffffff;
-            margin: 0 0 14px 0;
-            letter-spacing: 1px;
+            margin: 0 0 10px 0;
+            text-align: center;
             text-shadow: 0 0 10px rgba(192, 132, 252, 0.7);
         }
-
-        /* 特權優惠框 */
-        .store-perk {
+        .detail-discount {
             background: rgba(59, 7, 100, 0.6);
-            border-left: 4px solid #fbbf24;
-            padding: 9px 12px;
+            border-left: 4px solid var(--gold-bright);
+            padding: 8px 12px;
             border-radius: 4px;
             font-size: 14px;
             color: #fef08a;
             margin-bottom: 8px;
             font-weight: bold;
         }
-        .store-address {
+        .detail-address {
             font-size: 12px;
             color: #cbd5e1;
             margin-bottom: 12px;
             line-height: 1.4;
         }
 
-        /* Google Maps 實境導航按鈕 */
+        /* 導航按鈕 */
         .btn-navigation {
             display: flex;
             align-items: center;
@@ -192,15 +247,10 @@
             box-shadow: 0 4px 12px rgba(126, 34, 206, 0.4);
             margin-bottom: 12px;
             letter-spacing: 1px;
-            transition: 0.2s;
-        }
-        .btn-navigation:hover {
-            background: linear-gradient(90deg, #5b21b6, #7c3aed);
-            box-shadow: 0 0 18px rgba(192, 132, 252, 0.7);
         }
 
-        /* 核銷輸入與按鈕 */
-        .pin-box {
+        /* 核銷區塊 */
+        .verify-group {
             display: flex;
             gap: 6px;
         }
@@ -208,7 +258,7 @@
             flex: 1;
             padding: 10px;
             background: #0d0419;
-            border: 1px solid #7e22ce;
+            border: 1px solid var(--purple-border);
             border-radius: 6px;
             color: #ffd700;
             font-size: 15px;
@@ -229,30 +279,28 @@
             color: #090312;
             font-weight: 900;
             font-size: 14px;
-            letter-spacing: 1px;
             cursor: pointer;
             box-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
         }
 
-        /* 已集點封印章 */
-        .stamped-seal {
+        /* 已蓋章完成狀態 */
+        .stamped-banner {
             text-align: center;
-            padding: 12px;
+            padding: 10px;
             border: 2px dashed #4ade80;
             border-radius: 8px;
             background: rgba(34, 197, 94, 0.15);
             color: #4ade80;
             font-weight: 900;
-            font-size: 16px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
-            margin-top: 6px;
+            font-size: 15px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
         }
 
-        /* 啟用視窗 */
+        /* 啟用卡牌 */
         .activation-card {
             background: #170928;
-            border: 2px solid #a855f7;
+            border: 2px solid var(--purple-border);
             border-radius: 16px;
             padding: 24px 16px;
             text-align: center;
@@ -265,49 +313,60 @@
 </head>
 <body>
 
-    <div class="map-board">
+    <div class="map-wrapper">
         <!-- 頂部標題 -->
-        <div class="header-section">
+        <div class="title-header">
             <h1 class="main-title">✨ 桿道夫魔法地圖 ✨</h1>
-            <div class="sub-title">特約探索據點 ‧ 試煉啟程</div>
+            <div class="sub-title">點擊地圖據點 ‧ 開啟特權探索</div>
         </div>
 
-        <!-- 連線載入中 -->
+        <!-- 載入中 -->
         <div id="loading" style="text-align:center; padding: 40px 10px; color:#c084fc; font-size:16px;">
             正在感應公會魔力航道...
         </div>
 
         <!-- 啟用碼輸入區 -->
         <div id="activationSection" class="activation-card hidden">
-            <div class="store-sigil">📜</div>
-            <h2 style="color:#ffd700; margin:10px 0 6px;">解鎖魔法探索地圖</h2>
+            <div style="font-size:36px; margin-bottom:8px;">📜</div>
+            <h2 style="color:#ffd700; margin:0 0 8px;">解鎖魔法探索地圖</h2>
             <p style="font-size: 13px; color: #d8b4fe; margin-bottom:16px;">請輸入聯票專屬 6 碼通關密語：</p>
             <input type="text" id="activationInput" class="pin-input" style="width:100%; margin-bottom:12px; font-size:18px;" placeholder="例：TEST01" />
             <button onclick="handleActivation()" class="btn-verify" style="width:100%; padding:12px; font-size:16px;">開啟探索特權</button>
             <div id="activationMsg" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
         </div>
 
-        <!-- 正式探索地圖區 -->
+        <!-- 正式地圖探索世界 -->
         <div id="mapSection" class="hidden">
-            <!-- 進度追蹤 -->
-            <div class="quest-progress-box">
-                <div class="progress-title" id="stampCountText">探索進度：已集點 0 / 3 間合作據點</div>
-                <div class="progress-desc">✦ 集滿 3 間據點，即可至場館領取「公會專屬檔案夾」✦</div>
+            <!-- 進度條 -->
+            <div class="progress-bar">
+                <div class="progress-text" id="stampCountText">探索進度：已集點 0 / 3 間據點</div>
+                <div class="progress-sub">✦ 點擊地圖上的金色圓點，可切換據點導航與核銷 ✦</div>
             </div>
 
-            <!-- 羊皮紙探索畫布 -->
-            <div class="parchment-canvas">
-                <span class="corner-rune cr-tl">✦ I</span>
-                <span class="corner-rune cr-tr">✦ II</span>
-                <span class="corner-rune cr-bl">✦ III</span>
-                <span class="corner-rune cr-br">✦ IV</span>
+            <!-- 📜 2D 奇幻冒險大地圖 📜 -->
+            <div class="rpg-map-canvas" id="mapCanvas">
+                <!-- 羅盤與水印 -->
+                <svg class="compass-rose" viewBox="0 0 100 100">
+                    <polygon points="50,0 58,42 100,50 58,58 50,100 42,58 0,50 42,42" fill="#5c3514" />
+                    <circle cx="50" cy="50" r="10" fill="#edd8b4" stroke="#5c3514" stroke-width="3" />
+                </svg>
+                <div class="map-watermark">MAP OF EXPLORATION</div>
 
-                <div style="text-align:center; margin-bottom:20px; font-size:13px; font-weight:bold; color:#5c3514; letter-spacing:2px;">
-                    📜 合作特約探索名冊 📜
+                <!-- 魔法探索虛線軌跡 -->
+                <svg class="map-trails" id="trailsSvg">
+                    <!-- 連接點 1 (精誠路) -> 點 3 (育德路) -> 點 2 (信平路) -->
+                    <path class="trail-path" d="M 90,280 Q 140,190 190,170 T 320,80" />
+                </svg>
+
+                <!-- 據點圖釘（由 JS 動態生成在不同座標上） -->
+                <div id="nodesContainer"></div>
+            </div>
+
+            <!-- 底部：當前選中店家的詳細卷軸 -->
+            <div class="detail-card" id="detailCard">
+                <div id="detailContent">
+                    <p style="text-align:center; color:#c084fc;">正在展開據點秘卷...</p>
                 </div>
-
-                <!-- 店家卡牌容器 -->
-                <div id="merchantContainer"></div>
             </div>
         </div>
     </div>
@@ -323,7 +382,17 @@
             'Content-Type': 'application/json'
         };
 
+        // 3 間店家在 2D 地圖畫布上的座標配置（百分比分佈）
+        const NODE_POSITIONS = [
+            { x: 24, y: 74 }, // 據點 1：幻覺博物館（左下方）
+            { x: 80, y: 22 }, // 據點 2：女森創意製作所（右上角）
+            { x: 50, y: 46 }  // 據點 3：三拾叁精品茶飲（中心偏上）
+        ];
+
         let currentUserId = null;
+        let merchantsList = [];
+        let stampedSet = new Set();
+        let selectedMerchantId = null;
 
         async function initApp() {
             try {
@@ -334,7 +403,6 @@
                 }
                 const profile = await liff.getProfile();
                 currentUserId = profile.userId;
-
                 await checkUserStatus();
             } catch (err) {
                 let savedId = localStorage.getItem('gandalf_liff_uid');
@@ -355,7 +423,7 @@
 
                 if (list && list.length > 0 && list[0].is_used) {
                     document.getElementById('mapSection').classList.remove('hidden');
-                    loadMerchants();
+                    loadMapData();
                 } else {
                     document.getElementById('activationSection').classList.remove('hidden');
                 }
@@ -369,7 +437,7 @@
             const msg = document.getElementById('activationMsg');
             if (!code) return;
 
-            msg.innerText = '正在驗證通關密語...';
+            msg.innerText = '正在尋求公會認證...';
             msg.style.color = '#c084fc';
 
             const res = await fetch(`${API_URL}/activation_codes?code=eq.${code}&select=*`, { headers: apiHeaders });
@@ -393,68 +461,102 @@
                 body: JSON.stringify({ is_used: true, line_user_id: currentUserId, activated_at: new Date().toISOString() })
             });
 
-            msg.innerText = '✨ 啟動成功！正在展開地圖名冊...';
+            msg.innerText = '✨ 啟動成功！正在繪製地圖...';
             msg.style.color = '#4ade80';
 
             setTimeout(() => {
                 document.getElementById('activationSection').classList.add('hidden');
                 document.getElementById('mapSection').classList.remove('hidden');
-                loadMerchants();
+                loadMapData();
             }, 500);
         }
 
-        async function loadMerchants() {
-            const container = document.getElementById('merchantContainer');
-            container.innerHTML = '<p style="text-align:center; color:#5c3514;">正在讀取合作店家名冊...</p>';
-
+        async function loadMapData() {
             const [mRes, sRes] = await Promise.all([
                 fetch(`${API_URL}/merchants?select=*&order=id.asc`, { headers: apiHeaders }),
                 fetch(`${API_URL}/user_stamps?line_user_id=eq.${currentUserId}&select=merchant_id`, { headers: apiHeaders })
             ]);
 
-            const merchants = await mRes.json();
+            merchantsList = await mRes.json();
             const stamps = await sRes.json();
-            const stampedSet = new Set((stamps || []).map(s => s.merchant_id));
+            stampedSet = new Set((stamps || []).map(s => s.merchant_id));
 
             // 更新累積進度
-            document.getElementById('stampCountText').innerText = `探索進度：已集點 ${stamps.length} / ${merchants.length} 間合作據點`;
+            document.getElementById('stampCountText').innerText = `探索進度：已集點 ${stamps.length} / ${merchantsList.length} 間據點`;
 
+            // 預設選中第一家
+            if (!selectedMerchantId && merchantsList.length > 0) {
+                selectedMerchantId = merchantsList[0].id;
+            }
+
+            renderMapNodes();
+            renderSelectedDetail();
+        }
+
+        // 在 2D 地圖上渲染各個據點標記
+        function renderMapNodes() {
+            const container = document.getElementById('nodesContainer');
             container.innerHTML = '';
 
-            merchants.forEach((m, idx) => {
+            merchantsList.forEach((m, idx) => {
+                const pos = NODE_POSITIONS[idx] || { x: 30 + idx * 25, y: 30 + idx * 20 };
                 const isStamped = stampedSet.has(m.id);
-                const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(m.address)}`;
+                const isSelected = m.id === selectedMerchantId;
 
-                const card = document.createElement('div');
-                card.className = 'store-card';
-                card.innerHTML = `
-                    <div class="store-sigil">${idx + 1}</div>
-                    <h3 class="store-name">${m.name}</h3>
-                    <div class="store-perk">📜 特權優惠：${m.discount_info}</div>
-                    <div class="store-address">📍 店家地址：${m.address}</div>
-                    
-                    <a href="${navUrl}" target="_blank" class="btn-navigation">
-                        🧭 前往導航（開啟 Google Maps）
-                    </a>
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `map-node ${isStamped ? 'stamped' : ''} ${isSelected ? 'active' : ''}`;
+                nodeEl.style.left = `${pos.x}%`;
+                nodeEl.style.top = `${pos.y}%`;
+                nodeEl.onclick = () => selectMerchant(m.id);
 
-                    ${isStamped 
-                        ? `<div class="stamped-seal">✦ 已完成集點 ✦</div>`
-                        : `
-                            <div class="pin-box">
-                                <input type="password" id="pin_${m.id}" class="pin-input" placeholder="店員 PIN 碼" maxlength="6">
-                                <button onclick="verifyStorePin(${m.id}, '${m.pin_code}')" class="btn-verify">現場核銷</button>
-                            </div>
-                            <div id="stampMsg_${m.id}" style="margin-top:6px; font-size:13px; font-weight:bold; text-align:center;"></div>
-                        `
-                    }
+                nodeEl.innerHTML = `
+                    <div class="node-pin">${isStamped ? '✓' : (idx + 1)}</div>
+                    <div class="node-label">${m.name}</div>
                 `;
-                container.appendChild(card);
+                container.appendChild(nodeEl);
             });
         }
 
-        async function verifyStorePin(merchantId, correctPin) {
-            const input = document.getElementById(`pin_${merchantId}`).value.trim();
-            const msg = document.getElementById(`stampMsg_${merchantId}`);
+        function selectMerchant(id) {
+            selectedMerchantId = id;
+            renderMapNodes();
+            renderSelectedDetail();
+        }
+
+        // 渲染底部詳細面板
+        function renderSelectedDetail() {
+            const m = merchantsList.find(item => item.id === selectedMerchantId);
+            if (!m) return;
+
+            const isStamped = stampedSet.has(m.id);
+            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(m.address)}`;
+            const detailContainer = document.getElementById('detailContent');
+
+            detailContainer.innerHTML = `
+                <h3 class="detail-name">${m.name}</h3>
+                <div class="detail-discount">📜 特權優惠：${m.discount_info}</div>
+                <div class="detail-address">📍 據點地址：${m.address}</div>
+                
+                <a href="${navUrl}" target="_blank" class="btn-navigation">
+                    🧭 開啟 Google Maps 實境導航
+                </a>
+
+                ${isStamped 
+                    ? `<div class="stamped-banner">✦ 已完成集點 ‧ 印記已點亮 ✦</div>`
+                    : `
+                        <div class="verify-group">
+                            <input type="password" id="currentPinInput" class="pin-input" placeholder="店員 PIN 碼" maxlength="6">
+                            <button onclick="verifyCurrentStore('${m.pin_code}')" class="btn-verify">現場核銷</button>
+                        </div>
+                        <div id="verifyMsg" style="margin-top:8px; font-size:13px; font-weight:bold; text-align:center;"></div>
+                    `
+                }
+            `;
+        }
+
+        async function verifyCurrentStore(correctPin) {
+            const input = document.getElementById('currentPinInput').value.trim();
+            const msg = document.getElementById('verifyMsg');
 
             if (input !== correctPin) {
                 msg.innerText = '❌ 核銷密碼錯誤！';
@@ -465,7 +567,7 @@
             const res = await fetch(`${API_URL}/user_stamps`, {
                 method: 'POST',
                 headers: apiHeaders,
-                body: JSON.stringify({ line_user_id: currentUserId, merchant_id: merchantId })
+                body: JSON.stringify({ line_user_id: currentUserId, merchant_id: selectedMerchantId })
             });
 
             if (!res.ok) {
@@ -474,13 +576,12 @@
                 return;
             }
 
-            msg.innerText = '✨ 核銷完成，已成功集點！';
+            msg.innerText = '✨ 核銷成功，地圖印記已點亮！';
             msg.style.color = '#4ade80';
-            setTimeout(() => loadMerchants(), 500);
+            setTimeout(() => loadMapData(), 500);
         }
 
         window.addEventListener('load', initApp);
     </script>
 </body>
-</html>
 </html>
