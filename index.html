@@ -2,217 +2,301 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>桿道夫《魔法地圖》</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>桿道夫《魔法地圖》公會裂隙試煉</title>
     <!-- LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- Google 古典魔法風格字型 -->
+    <!-- Leaflet.js 互動地圖 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google 字體 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --parchment-bg: #f4ecd8;
-            --parchment-border: #8b5a2b;
-            --ink-dark: #2b1810;
-            --ink-red: #8b1e1e;
-            --ink-gold: #b38b2d;
+            --bg-dark: #0a0512;
+            --purple-glow: #a855f7;
+            --purple-bright: #c084fc;
+            --gold-accent: #eab308;
+            --gold-border: #b45309;
+            --card-bg: rgba(18, 10, 30, 0.85);
+            --ink-text: #f3e8ff;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Noto Serif TC', 'Cinzel', serif;
-            background-color: #1e130c;
-            /* 羊皮紙底紋紋理效果 */
+            background-color: var(--bg-dark);
             background-image: 
-                radial-gradient(circle, rgba(244,236,216,0.92) 0%, rgba(226,206,166,0.95) 100%),
-                repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px);
-            color: var(--ink-dark);
+                radial-gradient(circle at 50% 0%, rgba(147, 51, 234, 0.3) 0%, transparent 60%),
+                radial-gradient(circle at 10% 40%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.12) 0%, transparent 50%);
+            color: var(--ink-text);
             margin: 0;
-            padding: 16px 12px;
+            padding: 14px 10px 40px;
+            min-height: 100vh;
         }
 
-        .map-container {
-            max-width: 460px;
+        .container {
+            max-width: 480px;
             margin: auto;
-            border: 4px double var(--parchment-border);
-            padding: 16px;
-            background: rgba(249, 243, 229, 0.7);
-            border-radius: 4px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.4), inset 0 0 30px rgba(139, 90, 43, 0.15);
         }
 
-        /* 標題與羊皮紙裝飾 */
-        .map-header {
+        /* 標題旗幟 */
+        .header-box {
             text-align: center;
-            border-bottom: 2px dashed var(--parchment-border);
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-        .map-title {
-            font-family: 'Cinzel', serif;
-            font-size: 24px;
-            letter-spacing: 2px;
-            color: var(--ink-red);
-            margin: 4px 0;
-            font-weight: 800;
-        }
-        .map-subtitle {
-            font-size: 13px;
-            letter-spacing: 1px;
-            color: #5c3a21;
-        }
-
-        /* 卡片設計：手繪地圖據點卷軸風格 */
-        .spot-card {
-            background: #fbf7ee;
-            border: 2px solid #caa472;
-            border-radius: 6px;
-            padding: 14px;
+            padding: 16px 10px;
             margin-bottom: 16px;
             position: relative;
-            box-shadow: 2px 2px 6px rgba(43,24,16,0.1);
         }
-        .spot-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--ink-dark);
-            margin: 0 0 6px 0;
+        .header-title {
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ffd700;
+            text-shadow: 0 0 12px rgba(234, 179, 8, 0.8), 0 0 24px rgba(168, 85, 247, 0.6);
+            margin: 0;
+        }
+        .header-sub {
+            font-size: 13px;
+            color: #d8b4fe;
+            margin-top: 6px;
+            letter-spacing: 3px;
+        }
+
+        /* 真實地圖區塊 */
+        #map-wrapper {
+            position: relative;
+            border-radius: 14px;
+            padding: 4px;
+            background: linear-gradient(135deg, #a855f7, #eab308, #6b21a8);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+            margin-bottom: 20px;
+        }
+        #map {
+            width: 100%;
+            height: 270px;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        /* 地圖上的哥德印記自訂 Marker */
+        .custom-pin {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            width: 32px;
+            height: 38px;
+            background: #1e1035;
+            border: 2px solid #ffd700;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 0 10px #c084fc;
         }
-        .spot-desc {
+        .custom-pin span {
+            transform: rotate(45deg);
+            color: #ffd700;
+            font-weight: 900;
             font-size: 14px;
-            color: var(--ink-red);
-            font-weight: 700;
-            margin: 6px 0;
-            padding: 4px 8px;
-            background: rgba(139, 30, 30, 0.06);
-            border-left: 3px solid var(--ink-red);
         }
-        .spot-address {
+        .custom-pin.stamped {
+            background: #2e1065;
+            border-color: #4ade80;
+            box-shadow: 0 0 12px #4ade80;
+        }
+        .custom-pin.stamped span {
+            color: #4ade80;
+        }
+
+        /* 裂隙試煉卡牌 (Portal Frame) */
+        .rift-card {
+            background: var(--card-bg);
+            border: 2px solid #7e22ce;
+            border-radius: 40px 40px 12px 12px;
+            padding: 18px 14px;
+            margin-bottom: 22px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(126, 34, 206, 0.35), inset 0 0 15px rgba(168, 85, 247, 0.15);
+            backdrop-filter: blur(6px);
+        }
+        .rift-card::before {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 38px 38px 10px 10px;
+            pointer-events: none;
+        }
+
+        /* 頂部圓形編號徽章 */
+        .rift-badge {
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle, #2e1065 0%, #090314 100%);
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            margin: -36px auto 8px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffd700;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.6);
+        }
+
+        .rift-plaque {
+            text-align: center;
             font-size: 13px;
-            color: #634832;
-            margin: 6px 0;
+            letter-spacing: 2px;
+            color: #c084fc;
+            margin-bottom: 6px;
+        }
+        .rift-name {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(192, 132, 252, 0.6);
+        }
+        .rift-discount {
+            background: rgba(88, 28, 135, 0.4);
+            border-left: 3px solid #eab308;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #fef08a;
+            margin-bottom: 8px;
+        }
+        .rift-address {
+            font-size: 12px;
+            color: #a855f7;
+            margin-bottom: 12px;
         }
 
         /* 導航按鈕 */
         .btn-nav {
-            display: inline-block;
-            background: #dfcba5;
-            color: var(--ink-dark);
+            display: block;
+            text-align: center;
+            background: linear-gradient(90deg, #3b0764, #581c87);
+            color: #e9d5ff;
             text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 8px 0;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: bold;
-            border: 1px solid var(--parchment-border);
-            margin-top: 4px;
-            transition: 0.2s;
+            border: 1px solid #a855f7;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+            margin-bottom: 10px;
         }
-        .btn-nav:hover {
-            background: #caa472;
-        }
+        .btn-nav:hover { background: #6b21a8; }
 
-        /* 核銷區塊 */
-        .verify-box {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed #d9c29e;
-        }
-        input.pin-input {
+        /* 核銷輸入框與按鈕 */
+        .pin-input {
             width: 100%;
-            padding: 8px 10px;
-            box-sizing: border-box;
-            background: #fff9ed;
-            border: 1px solid var(--parchment-border);
-            font-size: 14px;
-            color: var(--ink-dark);
-            border-radius: 4px;
-            margin-bottom: 6px;
-        }
-        button.btn-verify {
-            width: 100%;
-            background: var(--ink-red);
-            color: #fbf7ee;
-            border: none;
             padding: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            letter-spacing: 1px;
+            background: #090314;
+            border: 1px solid #7e22ce;
+            border-radius: 6px;
+            color: #ffd700;
+            font-size: 15px;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
         }
-        button.btn-verify:hover {
-            background: #6e1515;
+        .pin-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 8px #ffd700;
+        }
+        .btn-verify {
+            width: 100%;
+            padding: 11px;
+            background: linear-gradient(90deg, #7e22ce, #a855f7);
+            border: 1px solid #ffd700;
+            border-radius: 6px;
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 15px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
         }
 
-        /* 封蠟章集點完成特效 */
-        .wax-stamp {
-            display: inline-block;
-            color: #991b1b;
-            border: 3px double #991b1b;
-            padding: 4px 12px;
-            font-weight: 800;
-            font-size: 15px;
+        /* 已蓋印完成印記 */
+        .wax-seal {
+            text-align: center;
+            padding: 10px;
+            border: 2px dashed #4ade80;
             border-radius: 8px;
-            transform: rotate(-6deg);
-            background: rgba(254, 226, 226, 0.4);
-            box-shadow: 0 0 4px rgba(153, 27, 27, 0.3);
-            letter-spacing: 2px;
-            margin-top: 6px;
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            font-weight: 900;
+            font-size: 16px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+            margin-top: 8px;
         }
 
         /* 進度條 */
-        .progress-box {
-            background: #efe3ca;
-            border: 1px solid var(--parchment-border);
+        .progress-banner {
+            background: rgba(46, 16, 101, 0.6);
+            border: 1px solid #a855f7;
             padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-size: 13px;
+            border-radius: 8px;
             text-align: center;
+            font-size: 14px;
+            color: #ffd700;
+            margin-bottom: 18px;
         }
 
-        .hidden { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="map-container">
-        <!-- 地圖卷軸標題 -->
-        <div class="map-header">
-            <div class="map-subtitle">公會冒險任務 ‧ 探索城市據點</div>
-            <div class="map-title">✨ 桿道夫魔法地圖 ✨</div>
-            <div style="font-size: 11px; color: #785338;">I SOLEMNLY SWEAR THAT I AM UP TO NO GOOD</div>
+    <div class="container">
+        <!-- 頂部標題 -->
+        <div class="header-box">
+            <h1 class="header-title">✨ 桿道夫魔法地圖 ✨</h1>
+            <div class="header-sub">踏入裂隙 ‧ 試煉啟程</div>
         </div>
 
         <!-- 讀取狀態 -->
-        <div id="loading" style="text-align:center; padding: 20px; font-weight:bold;">
-            正在展開羊皮紙魔法卷軸...
+        <div id="loading" style="text-align:center; padding: 40px 10px; color:#c084fc; font-size:16px;">
+            正在感應公會魔力樞紐...
         </div>
 
-        <!-- 步驟 1：輸入啟用碼 -->
-        <div id="activationSection" class="hidden">
-            <div class="spot-card" style="text-align: center;">
-                <h3 style="margin-top:0; color:var(--ink-red);">解鎖魔法探索地圖</h3>
-                <p style="font-size: 13px; color:#5c3a21;">請輸入聯票專屬之 6 碼通關密語：</p>
-                <input type="text" id="activationInput" class="pin-input" placeholder="例：TEST01" style="text-align:center; font-size:16px; letter-spacing:2px;" />
-                <button onclick="handleActivation()" class="btn-verify" style="margin-top:6px;">開啟探索特權</button>
-                <div id="activationMsg" style="margin-top:8px; font-size:13px; font-weight:bold;"></div>
-            </div>
+        <!-- 步驟 1：輸入通關啟用碼 -->
+        <div id="activationSection" class="rift-card hidden" style="text-align:center; margin-top:20px;">
+            <div class="rift-badge">📜</div>
+            <h2 class="rift-name" style="margin-top:10px;">解鎖公會試煉</h2>
+            <p style="font-size: 13px; color: #d8b4fe;">請輸入聯票專屬 6 碼通關密語：</p>
+            <input type="text" id="activationInput" class="pin-input" placeholder="例：TEST01" />
+            <button onclick="handleActivation()" class="btn-verify">開啟探索特權</button>
+            <div id="activationMsg" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
         </div>
 
-        <!-- 步驟 2：店家地圖與集點進度 -->
+        <!-- 步驟 2：真實互動地圖與裂隙卡牌 -->
         <div id="mapSection" class="hidden">
             <!-- 進度追蹤 -->
-            <div class="progress-box">
-                <span id="stampCountText">探索進度：已蒐集 0 / 3 個魔法印記</span>
-                <div style="font-size:11px; color:#6e4b2d; margin-top:2px;">滿 3 家即可於場館領取「初階試煉者：公會檔案夾」</div>
+            <div class="progress-banner">
+                <span id="stampCountText">試煉進度：已平定 0 / 3 處公會裂隙</span>
+                <div style="font-size: 11px; color: #d8b4fe; margin-top: 4px;">集滿 3 處可至場館領取「公會專屬檔案夾」</div>
             </div>
 
-            <!-- 店家列表 -->
+            <!-- 真實 Leaflet 地圖容器 -->
+            <div id="map-wrapper">
+                <div id="map"></div>
+            </div>
+
+            <!-- 卡牌清單 -->
             <div id="merchantContainer"></div>
         </div>
     </div>
@@ -228,54 +312,69 @@
             'Content-Type': 'application/json'
         };
 
+        // 店家座標（真實台中經緯度）
+        const STORE_COORDS = {
+            1: [24.15414, 120.65583], // 幻覺博物館 (精誠路)
+            2: [24.18371, 120.66982], // 女森創意製作所 (信平路)
+            3: [24.15923, 120.67254]  // 三拾叁精品茶飲 (育德路)
+        };
+
+        const RIFT_TITLES = ['第一裂隙', '第二裂隙', '第三裂隙', '第四裂隙', '第五裂隙', '第六裂隙', '第七裂隙', '第八裂隙', '第九裂隙', '第十裂隙'];
+
         let currentUserId = null;
+        let leafletMap = null;
+        let mapMarkers = [];
 
         async function initApp() {
             try {
-                if (window.liff) {
-                    try {
-                        await Promise.race([
-                            liff.init({ liffId: LIFF_ID }),
-                            new Promise((_, reject) => setTimeout(() => reject('timeout'), 2500))
-                        ]);
-                        if (liff.isLoggedIn()) {
-                            const profile = await liff.getProfile();
-                            currentUserId = profile.userId;
-                        } else if (liff.isInClient()) {
-                            liff.login();
-                            return;
-                        }
-                    } catch (e) {}
+                // 強制喚起 LINE LIFF 授權登入
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
                 }
+                const profile = await liff.getProfile();
+                currentUserId = profile.userId;
 
-                if (!currentUserId) {
-                    let savedId = localStorage.getItem('gandalf_uid');
-                    if (!savedId) {
-                        savedId = 'MAGE_' + Math.floor(1000 + Math.random() * 9000);
-                        localStorage.setItem('gandalf_uid', savedId);
-                    }
-                    currentUserId = savedId;
-                }
-
-                await checkStatus();
+                await checkUserStatus();
             } catch (err) {
-                document.getElementById('loading').innerText = '魔法地圖展開失敗，請重新載入。';
+                // 若在非 LINE 瀏覽器下強制跳轉登入失敗，允許使用本機代碼測試
+                let savedId = localStorage.getItem('gandalf_liff_uid');
+                if (!savedId) {
+                    savedId = 'TEST_LINE_USER_' + Math.floor(1000 + Math.random() * 9000);
+                    localStorage.setItem('gandalf_liff_uid', savedId);
+                }
+                currentUserId = savedId;
+                await checkUserStatus();
             }
         }
 
-        async function checkStatus() {
-            const checkRes = await fetch(`${API_URL}/activation_codes?line_user_id=eq.${currentUserId}&select=*`, {
-                headers: apiHeaders
-            });
-            const activatedList = await checkRes.json();
-            document.getElementById('loading').classList.add('hidden');
+        async function checkUserStatus() {
+            try {
+                const res = await fetch(`${API_URL}/activation_codes?line_user_id=eq.${currentUserId}&select=*`, { headers: apiHeaders });
+                const list = await res.json();
+                document.getElementById('loading').classList.add('hidden');
 
-            if (activatedList && activatedList.length > 0 && activatedList[0].is_used) {
-                document.getElementById('mapSection').classList.remove('hidden');
-                loadMerchants();
-            } else {
-                document.getElementById('activationSection').classList.remove('hidden');
+                if (list && list.length > 0 && list[0].is_used) {
+                    document.getElementById('mapSection').classList.remove('hidden');
+                    initLeafletMap();
+                    loadMerchants();
+                } else {
+                    document.getElementById('activationSection').classList.remove('hidden');
+                }
+            } catch (e) {
+                document.getElementById('loading').innerText = '魔力連線異常，請重整頁面。';
             }
+        }
+
+        // 初始化真實互動地圖 (CartoDB Dark 奇幻黑夜底圖)
+        function initLeafletMap() {
+            if (leafletMap) return;
+            leafletMap = L.map('map').setView([24.165, 120.665], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 18
+            }).addTo(leafletMap);
         }
 
         async function handleActivation() {
@@ -283,21 +382,21 @@
             const msg = document.getElementById('activationMsg');
             if (!code) return;
 
-            msg.innerText = '正在尋求公會認證...';
-            msg.style.color = '#785338';
+            msg.innerText = '正在驗證通關密語...';
+            msg.style.color = '#c084fc';
 
             const res = await fetch(`${API_URL}/activation_codes?code=eq.${code}&select=*`, { headers: apiHeaders });
             const data = await res.json();
 
             if (!data || data.length === 0) {
                 msg.innerText = '❌ 查無此通關密語。';
-                msg.style.color = '#8b1e1e';
+                msg.style.color = '#f87171';
                 return;
             }
 
             if (data[0].is_used) {
-                msg.innerText = '❌ 此密語已被其他冒險者綁定。';
-                msg.style.color = '#8b1e1e';
+                msg.innerText = '❌ 此密語已被其他冒險者使用。';
+                msg.style.color = '#f87171';
                 return;
             }
 
@@ -307,19 +406,20 @@
                 body: JSON.stringify({ is_used: true, line_user_id: currentUserId, activated_at: new Date().toISOString() })
             });
 
-            msg.innerText = '✨ 啟動成功！正在繪製探索據點...';
-            msg.style.color = '#2d6a4f';
+            msg.innerText = '✨ 啟動成功！正在感應裂隙據點...';
+            msg.style.color = '#4ade80';
 
             setTimeout(() => {
                 document.getElementById('activationSection').classList.add('hidden');
                 document.getElementById('mapSection').classList.remove('hidden');
+                initLeafletMap();
                 loadMerchants();
             }, 600);
         }
 
         async function loadMerchants() {
             const container = document.getElementById('merchantContainer');
-            container.innerHTML = '<p style="text-align:center; color:#785338;">探索據點繪製中...</p>';
+            container.innerHTML = '<p style="text-align:center; color:#c084fc;">裂隙陣列召喚中...</p>';
 
             const [mRes, sRes] = await Promise.all([
                 fetch(`${API_URL}/merchants?select=*&order=id.asc`, { headers: apiHeaders }),
@@ -331,37 +431,56 @@
             const stampedSet = new Set((stamps || []).map(s => s.merchant_id));
 
             // 更新印記進度
-            document.getElementById('stampCountText').innerText = `探索進度：已蒐集 ${stamps.length} / ${merchants.length} 個魔法印記`;
+            document.getElementById('stampCountText').innerText = `試煉進度：已平定 ${stamps.length} / ${merchants.length} 處公會裂隙`;
 
+            // 清理舊的地圖圖釘
+            mapMarkers.forEach(m => leafletMap.removeLayer(m));
+            mapMarkers = [];
             container.innerHTML = '';
 
             merchants.forEach((m, idx) => {
                 const isStamped = stampedSet.has(m.id);
+                const coords = STORE_COORDS[m.id] || [24.16, 120.66];
+                const riftTitle = RIFT_TITLES[idx] || `第${idx + 1}裂隙`;
                 const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(m.address)}`;
 
-                const item = document.createElement('div');
-                item.className = 'spot-card';
-                item.innerHTML = `
-                    <div class="spot-name">
-                        <span>🏰 据點 ${idx + 1}：${m.name}</span>
-                    </div>
-                    <div class="spot-desc">📜 專屬特權：${m.discount_info}</div>
-                    <div class="spot-address">📍 地址：${m.address}</div>
-                    <a href="${navUrl}" target="_blank" class="btn-nav">🧭 開啟 Google Maps 導航</a>
+                // 在真實地圖上釘上哥德印記圖釘
+                const pinHtml = `<div class="custom-pin ${isStamped ? 'stamped' : ''}"><span>${idx + 1}</span></div>`;
+                const customIcon = L.divIcon({ html: pinHtml, className: '', iconSize: [32, 38], iconAnchor: [16, 38] });
+                const marker = L.marker(coords, { icon: customIcon }).addTo(leafletMap);
+                marker.bindPopup(`<b>${riftTitle}：${m.name}</b><br>${m.discount_info}`);
+                mapMarkers.push(marker);
+
+                // 卡牌列表渲染
+                const card = document.createElement('div');
+                card.className = 'rift-card';
+                card.innerHTML = `
+                    <div class="rift-badge">${idx + 1}</div>
+                    <div class="rift-plaque">✦ ${riftTitle} ✦</div>
+                    <h3 class="rift-name">${m.name}</h3>
+                    <div class="rift-discount">📜 特權獎勵：${m.discount_info}</div>
+                    <div class="rift-address">📍 據點座標：${m.address}</div>
+                    <a href="${navUrl}" target="_blank" class="btn-nav">🧭 開啟 Google Maps 實境導航</a>
 
                     ${isStamped 
-                        ? `<div style="text-align:right;"><div class="wax-stamp">✦ 已完成集點 ✦</div></div>`
+                        ? `<div class="wax-seal">✦ 裂隙已平定 ‧ 試煉完成 ✦</div>`
                         : `
-                            <div class="verify-box">
-                                <input type="password" id="pin_${m.id}" class="pin-input" placeholder="現場店員輸入 4 碼核銷密碼" maxlength="6">
-                                <button onclick="verifyStorePin(${m.id}, '${m.pin_code}')" class="btn-verify">現場核銷 ‧ 蓋上印記</button>
-                                <div id="stampMsg_${m.id}" style="margin-top:6px; font-size:13px; font-weight:bold;"></div>
+                            <div style="margin-top:10px;">
+                                <input type="password" id="pin_${m.id}" class="pin-input" placeholder="店員輸入 4 碼核銷密碼" maxlength="6">
+                                <button onclick="verifyStorePin(${m.id}, '${m.pin_code}')" class="btn-verify">踏入裂隙 ‧ 完成核銷</button>
+                                <div id="stampMsg_${m.id}" style="margin-top:6px; font-size:13px; font-weight:bold; text-align:center;"></div>
                             </div>
                         `
                     }
                 `;
-                container.appendChild(item);
+                container.appendChild(card);
             });
+
+            // 讓地圖視野自動包含所有標記點
+            if (mapMarkers.length > 0) {
+                const group = new L.featureGroup(mapMarkers);
+                leafletMap.fitBounds(group.pad(0.2));
+            }
         }
 
         async function verifyStorePin(merchantId, correctPin) {
@@ -370,7 +489,7 @@
 
             if (input !== correctPin) {
                 msg.innerText = '❌ 核銷密碼錯誤！';
-                msg.style.color = '#8b1e1e';
+                msg.style.color = '#f87171';
                 return;
             }
 
@@ -381,17 +500,19 @@
             });
 
             if (!res.ok) {
-                msg.innerText = '⚠️ 本據點已蓋印完成！';
-                msg.style.color = '#8b1e1e';
+                msg.innerText = '⚠️ 本裂隙已完成核銷！';
+                msg.style.color = '#facc15';
                 return;
             }
 
-            msg.innerText = '✨ 核銷完成，魔法印記已點亮！';
-            msg.style.color = '#2d6a4f';
+            msg.innerText = '✨ 核銷完成，魔法裂隙已封印！';
+            msg.style.color = '#4ade80';
             setTimeout(() => loadMerchants(), 600);
         }
 
         window.addEventListener('load', initApp);
     </script>
+</body>
+</html>
 </body>
 </html>
