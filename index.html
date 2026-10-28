@@ -43,61 +43,77 @@
     </div>
 
     <script>
-        // 金鑰配置
         const LIFF_ID = '2012258408-yrd0t2GN';
         const SUPABASE_URL = 'https://wsphfkvqquztearorpkd.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_B9mdwTlyqRCRMPRK4o2Enw_eiUY5vU-';
 
-        const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 修正連線實例變數，避免命名衝突
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUserId = null;
 
-        // 初始化流程
         async function initApp() {
+            const loadingEl = document.getElementById('loading');
             try {
-                await liff.init({ liffId: LIFF_ID });
-                if (liff.isLoggedIn()) {
-                    const profile = await liff.getProfile();
-                    currentUserId = profile.userId;
-                } else if (liff.isInClient()) {
-                    liff.login();
-                    return;
+                // 優先嘗試 LIFF 登入辨識
+                if (window.liff) {
+                    await liff.init({ liffId: LIFF_ID });
+                    if (liff.isLoggedIn()) {
+                        const profile = await liff.getProfile();
+                        currentUserId = profile.userId;
+                    } else if (liff.isInClient()) {
+                        liff.login();
+                        return;
+                    } else {
+                        currentUserId = 'TEST_USER_' + Math.floor(1000 + Math.random() * 9000);
+                    }
                 } else {
-                    currentUserId = 'TEST_LINE_USER_' + Math.floor(Math.random() * 1000);
+                    currentUserId = 'TEST_USER_' + Math.floor(1000 + Math.random() * 9000);
                 }
 
                 document.getElementById('userIdText').innerText = currentUserId;
                 await checkActivationStatus();
             } catch (err) {
-                document.getElementById('loading').innerText = '系統初始化失敗，請重新開啟。';
+                console.error(err);
+                loadingEl.innerText = '連線失敗：' + (err.message || '請確認網路');
+                loadingEl.style.color = '#ef4444';
             }
         }
 
-        // 檢查該使用者是否已啟用過
         async function checkActivationStatus() {
-            const { data } = await supabase
-                .from('activation_codes')
-                .select('*')
-                .eq('line_user_id', currentUserId)
-                .maybeSingle();
+            try {
+                const { data, error } = await db
+                    .from('activation_codes')
+                    .select('*')
+                    .eq('line_user_id', currentUserId)
+                    .maybeSingle();
 
-            document.getElementById('loading').classList.add('hidden');
+                document.getElementById('loading').classList.add('hidden');
 
-            if (data && data.is_used) {
-                document.getElementById('mapSection').classList.remove('hidden');
-                loadMerchants();
-            } else {
-                document.getElementById('activationSection').classList.remove('hidden');
+                if (data && data.is_used) {
+                    document.getElementById('mapSection').classList.remove('hidden');
+                    loadMerchants();
+                } else {
+                    document.getElementById('activationSection').classList.remove('hidden');
+                }
+            } catch (e) {
+                document.getElementById('loading').innerText = '載入狀態異常：' + e.message;
             }
         }
 
-        // 處理啟用碼驗證
         async function handleActivation() {
             const code = document.getElementById('activationInput').value.trim().toUpperCase();
             const msg = document.getElementById('activationMsg');
 
-            if (!code) return;
+            if (!code) {
+                msg.innerText = '請輸入啟用碼';
+                msg.style.color = '#ef4444';
+                return;
+            }
 
-            const { data, error } = await supabase
+            msg.innerText = '驗證中...';
+            msg.style.color = '#cbd5e1';
+
+            const { data, error } = await db
                 .from('activation_codes')
                 .select('*')
                 .eq('code', code)
@@ -115,10 +131,16 @@
                 return;
             }
 
-            await supabase
+            const { error: updateError } = await db
                 .from('activation_codes')
                 .update({ is_used: true, line_user_id: currentUserId, activated_at: new Date() })
                 .eq('code', code);
+
+            if (updateError) {
+                msg.innerText = '❌ 啟用失敗：' + updateError.message;
+                msg.style.color = '#ef4444';
+                return;
+            }
 
             msg.innerText = '✅ 啟用成功！正在加載據點...';
             msg.style.color = '#22c55e';
@@ -127,23 +149,22 @@
                 document.getElementById('activationSection').classList.add('hidden');
                 document.getElementById('mapSection').classList.remove('hidden');
                 loadMerchants();
-            }, 800);
+            }, 500);
         }
 
-        // 讀取店家與個人蓋章狀態
         async function loadMerchants() {
             const container = document.getElementById('merchantContainer');
             container.innerHTML = '<p>讀取據點資料中...</p>';
 
             const [{ data: merchants }, { data: stamps }] = await Promise.all([
-                supabase.from('merchants').select('*'),
-                supabase.from('user_stamps').select('merchant_id').eq('line_user_id', currentUserId)
+                db.from('merchants').select('*'),
+                db.from('user_stamps').select('merchant_id').eq('line_user_id', currentUserId)
             ]);
 
             const stampedSet = new Set((stamps || []).map(s => s.merchant_id));
             container.innerHTML = '';
 
-            merchants.forEach(m => {
+            (merchants || []).forEach(m => {
                 const isStamped = stampedSet.has(m.id);
                 const item = document.createElement('div');
                 item.className = 'card';
@@ -167,7 +188,6 @@
             });
         }
 
-        // 店家核銷集點驗證
         async function verifyStorePin(merchantId, correctPin) {
             const input = document.getElementById(`pin_${merchantId}`).value.trim();
             const msg = document.getElementById(`stampMsg_${merchantId}`);
@@ -178,7 +198,7 @@
                 return;
             }
 
-            const { error } = await supabase
+            const { error } = await db
                 .from('user_stamps')
                 .insert([{ line_user_id: currentUserId, merchant_id: merchantId }]);
 
@@ -190,10 +210,10 @@
 
             msg.innerText = '✅ 核銷成功！';
             msg.style.color = '#22c55e';
-            setTimeout(() => loadMerchants(), 800);
+            setTimeout(() => loadMerchants(), 500);
         }
 
-        window.onload = initApp;
+        window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
