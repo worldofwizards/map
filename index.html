@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桿道夫《魔法地圖》</title>
+    <!-- 引入 LINE LIFF SDK 與 Supabase SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 16px; margin: 0; background-color: #0f172a; color: #f8fafc; }
+        .container { max-width: 480px; margin: auto; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        h2, h3, h4 { margin-top: 0; color: #fbbf24; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #d97706; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #b45309; }
+        .hidden { display: none; }
+        .stamp-badge { display: inline-block; background: #22c55e; color: #000; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-top: 6px; }
+        .user-tag { font-size: 12px; color: #94a3b8; word-break: break-all; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>✨ 桿道夫魔法地圖</h2>
+        <div id="loading" class="card">正在連線魔法公會伺服器...</div>
+
+        <!-- 步驟 1：啟用碼輸入頁面 -->
+        <div id="activationSection" class="card hidden">
+            <h3>📜 啟用你的冒險地圖</h3>
+            <p>請輸入票券上的 6 碼啟用碼：</p>
+            <input type="text" id="activationInput" placeholder="例：TEST01" />
+            <button onclick="handleActivation()">驗證並啟用</button>
+            <p id="activationMsg" style="margin-top:10px;"></p>
+        </div>
+
+        <!-- 步驟 2：合作店家與集點清單 -->
+        <div id="mapSection" class="card hidden">
+            <h3>🗺️ 合作探索據點</h3>
+            <div class="user-tag">冒險者識別碼：<span id="userIdText"></span></div>
+            <div id="merchantContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // 金鑰配置
+        const LIFF_ID = '2012258408-yrd0t2GN';
+        const SUPABASE_URL = 'https://wsphfkvqquztearorpkd.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_B9mdwTlyqRCRMPRK4o2Enw_eiUY5vU-';
+
+        const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUserId = null;
+
+        // 初始化流程
+        async function initApp() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    currentUserId = profile.userId;
+                } else if (liff.isInClient()) {
+                    liff.login();
+                    return;
+                } else {
+                    currentUserId = 'TEST_LINE_USER_' + Math.floor(Math.random() * 1000);
+                }
+
+                document.getElementById('userIdText').innerText = currentUserId;
+                await checkActivationStatus();
+            } catch (err) {
+                document.getElementById('loading').innerText = '系統初始化失敗，請重新開啟。';
+            }
+        }
+
+        // 檢查該使用者是否已啟用過
+        async function checkActivationStatus() {
+            const { data } = await supabase
+                .from('activation_codes')
+                .select('*')
+                .eq('line_user_id', currentUserId)
+                .maybeSingle();
+
+            document.getElementById('loading').classList.add('hidden');
+
+            if (data && data.is_used) {
+                document.getElementById('mapSection').classList.remove('hidden');
+                loadMerchants();
+            } else {
+                document.getElementById('activationSection').classList.remove('hidden');
+            }
+        }
+
+        // 處理啟用碼驗證
+        async function handleActivation() {
+            const code = document.getElementById('activationInput').value.trim().toUpperCase();
+            const msg = document.getElementById('activationMsg');
+
+            if (!code) return;
+
+            const { data, error } = await supabase
+                .from('activation_codes')
+                .select('*')
+                .eq('code', code)
+                .maybeSingle();
+
+            if (error || !data) {
+                msg.innerText = '❌ 查無此啟用碼，請確認後重試。';
+                msg.style.color = '#ef4444';
+                return;
+            }
+
+            if (data.is_used) {
+                msg.innerText = '❌ 此啟用碼已於其他帳號啟用。';
+                msg.style.color = '#ef4444';
+                return;
+            }
+
+            await supabase
+                .from('activation_codes')
+                .update({ is_used: true, line_user_id: currentUserId, activated_at: new Date() })
+                .eq('code', code);
+
+            msg.innerText = '✅ 啟用成功！正在加載據點...';
+            msg.style.color = '#22c55e';
+
+            setTimeout(() => {
+                document.getElementById('activationSection').classList.add('hidden');
+                document.getElementById('mapSection').classList.remove('hidden');
+                loadMerchants();
+            }, 800);
+        }
+
+        // 讀取店家與個人蓋章狀態
+        async function loadMerchants() {
+            const container = document.getElementById('merchantContainer');
+            container.innerHTML = '<p>讀取據點資料中...</p>';
+
+            const [{ data: merchants }, { data: stamps }] = await Promise.all([
+                supabase.from('merchants').select('*'),
+                supabase.from('user_stamps').select('merchant_id').eq('line_user_id', currentUserId)
+            ]);
+
+            const stampedSet = new Set((stamps || []).map(s => s.merchant_id));
+            container.innerHTML = '';
+
+            merchants.forEach(m => {
+                const isStamped = stampedSet.has(m.id);
+                const item = document.createElement('div');
+                item.className = 'card';
+                item.style.background = '#334155';
+                item.innerHTML = `
+                    <h4>${m.name}</h4>
+                    <p style="font-size:14px; margin: 4px 0;">優惠：${m.discount_info}</p>
+                    <p style="font-size:12px; color:#cbd5e1; margin: 4px 0;">地點：${m.address || '無'}</p>
+                    ${isStamped 
+                        ? `<div class="stamp-badge">🌟 已核銷集點</div>`
+                        : `
+                            <div style="margin-top:10px;">
+                                <input type="password" id="pin_${m.id}" placeholder="店家核銷 PIN 碼" maxlength="6" style="margin-bottom:6px;">
+                                <button onclick="verifyStorePin(${m.id}, '${m.pin_code}')">現場核銷</button>
+                                <div id="stampMsg_${m.id}" style="margin-top:6px; font-size:14px;"></div>
+                            </div>
+                        `
+                    }
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // 店家核銷集點驗證
+        async function verifyStorePin(merchantId, correctPin) {
+            const input = document.getElementById(`pin_${merchantId}`).value.trim();
+            const msg = document.getElementById(`stampMsg_${merchantId}`);
+
+            if (input !== correctPin) {
+                msg.innerText = '❌ 核銷碼錯誤！';
+                msg.style.color = '#ef4444';
+                return;
+            }
+
+            const { error } = await supabase
+                .from('user_stamps')
+                .insert([{ line_user_id: currentUserId, merchant_id: merchantId }]);
+
+            if (error) {
+                msg.innerText = '❌ 紀錄寫入失敗，請重試。';
+                msg.style.color = '#ef4444';
+                return;
+            }
+
+            msg.innerText = '✅ 核銷成功！';
+            msg.style.color = '#22c55e';
+            setTimeout(() => loadMerchants(), 800);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
