@@ -30,46 +30,48 @@
                 linear-gradient(180deg, #090214 0%, #17072e 50%, #090214 100%);
             color: #f3e8ff;
             margin: 0;
-            padding: 12px 10px 40px;
+            padding: 8px 10px 24px;
             min-height: 100vh;
         }
 
         .map-wrapper {
-            max-width: 480px;
+            max-width: 440px;
             margin: auto;
             position: relative;
         }
 
+        /* 頂部標題 */
         .title-header {
             text-align: center;
-            padding: 8px 0 10px;
+            padding: 4px 0 6px;
             position: relative;
         }
         .main-title {
             font-family: 'Cinzel', serif;
-            font-size: 24px;
+            font-size: 21px;
             font-weight: 900;
             color: var(--gold-glow);
             letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(251, 191, 36, 0.8), 0 0 25px rgba(168, 85, 247, 0.8);
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.8), 0 0 20px rgba(168, 85, 247, 0.8);
             margin: 0;
         }
         .sub-title {
-            font-size: 12px;
+            font-size: 11px;
             color: #d8b4fe;
-            margin-top: 4px;
-            letter-spacing: 3px;
+            margin-top: 2px;
+            letter-spacing: 2px;
         }
 
+        /* 票券狀態列 */
         .active-code-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(45, 12, 77, 0.8);
+            background: rgba(45, 12, 77, 0.85);
             border: 1px solid #a855f7;
             border-radius: 8px;
-            padding: 6px 12px;
-            margin-bottom: 10px;
+            padding: 5px 10px;
+            margin-bottom: 8px;
             font-size: 12px;
         }
         .code-tag {
@@ -82,18 +84,19 @@
             border: 1px solid #ffd700;
             color: #ffffff;
             font-size: 11px;
-            padding: 4px 8px;
+            padding: 3px 8px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
         }
 
+        /* 進度條 */
         .progress-bar {
             background: rgba(35, 11, 65, 0.9);
             border: 1px solid var(--purple-border);
             border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 14px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
             text-align: center;
             box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
             transition: 0.3s;
@@ -111,7 +114,7 @@
         }
         .progress-text {
             color: var(--gold-glow);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 900;
         }
         .progress-sub {
@@ -120,12 +123,13 @@
             margin-top: 2px;
         }
 
+        /* 📜 羊皮紙卷軸畫布（優化為 375px 高度，適應手機單頁呈現） 📜 */
         .scroll-map-container {
             position: relative;
             width: 100%;
-            height: 480px;
-            margin-bottom: 16px;
-            filter: drop-shadow(0 12px 25px rgba(0, 0, 0, 0.8));
+            height: 375px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.8));
         }
 
         .scroll-svg-layer {
@@ -138,6 +142,7 @@
             z-index: 1;
         }
 
+        /* 據點點位 */
         .map-node {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -149,21 +154,21 @@
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .map-node:active, .map-node.active {
-            transform: translate(-50%, -50%) scale(1.18);
+            transform: translate(-50%, -50%) scale(1.15);
         }
 
         .node-pin {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             background: radial-gradient(circle, #2d0b4e 0%, #0c0217 100%);
-            border: 3px solid #ffd700;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.95), 0 4px 10px rgba(0,0,0,0.7);
+            border: 2.5px solid #ffd700;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.95), 0 3px 8px rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Cinzel', serif;
-            font-size: 19px;
+            font-size: 17px;
             font-weight: 900;
             color: #ffd700;
             transition: 0.3s;
@@ -172,57 +177,57 @@
             background: radial-gradient(circle, #064e3b 0%, #022c22 100%);
             border-color: #4ade80;
             color: #4ade80;
-            box-shadow: 0 0 18px rgba(74, 222, 128, 0.95);
+            box-shadow: 0 0 16px rgba(74, 222, 128, 0.95);
         }
 
         .node-label {
             background: rgba(18, 5, 34, 0.94);
             color: #fef08a;
             border: 1px solid #eab308;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 10.5px;
             font-weight: 900;
-            margin-top: 4px;
+            margin-top: 3px;
             white-space: nowrap;
             box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-            letter-spacing: 0.5px;
         }
         .map-node.stamped .node-label {
             border-color: #4ade80;
             color: #86efac;
         }
 
+        /* 據點詳細資訊卡 */
         .detail-card {
             background: #170928;
             border: 2px solid var(--purple-border);
-            border-radius: 16px;
-            padding: 18px 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 18px rgba(147, 51, 234, 0.4);
+            border-radius: 14px;
+            padding: 14px 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.7), 0 0 15px rgba(147, 51, 234, 0.4);
             position: relative;
         }
         .detail-name {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 900;
             color: #ffffff;
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             text-align: center;
             text-shadow: 0 0 10px rgba(192, 132, 252, 0.7);
         }
         .detail-discount {
             background: rgba(59, 7, 100, 0.6);
             border-left: 4px solid var(--gold-bright);
-            padding: 8px 12px;
+            padding: 7px 10px;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13.5px;
             color: #fef08a;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: bold;
         }
         .detail-address {
-            font-size: 12px;
+            font-size: 11.5px;
             color: #cbd5e1;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.4;
         }
 
@@ -230,17 +235,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             background: linear-gradient(90deg, #4c1d95, #6d28d9);
             color: #fef08a;
             text-decoration: none;
-            padding: 10px 0;
+            padding: 9px 0;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 900;
             border: 1px solid #a855f7;
-            box-shadow: 0 4px 12px rgba(126, 34, 206, 0.4);
-            margin-bottom: 12px;
+            box-shadow: 0 3px 10px rgba(126, 34, 206, 0.4);
+            margin-bottom: 10px;
             letter-spacing: 1px;
         }
 
@@ -250,7 +255,7 @@
         }
         .pin-input {
             flex: 1;
-            padding: 10px;
+            padding: 9px;
             background: #0d0419;
             border: 1px solid var(--purple-border);
             border-radius: 6px;
@@ -259,14 +264,9 @@
             text-align: center;
             letter-spacing: 3px;
         }
-        .pin-input:focus {
-            outline: none;
-            border-color: #ffd700;
-            box-shadow: 0 0 10px #ffd700;
-        }
         .btn-verify {
             flex: 1;
-            padding: 10px;
+            padding: 9px;
             background: linear-gradient(90deg, #9333ea, #c084fc);
             border: 1px solid #ffd700;
             border-radius: 6px;
@@ -274,20 +274,20 @@
             font-weight: 900;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
+            box-shadow: 0 0 10px rgba(192, 132, 252, 0.5);
         }
 
         .stamped-banner {
             text-align: center;
-            padding: 10px;
+            padding: 9px;
             border: 2px dashed #4ade80;
             border-radius: 8px;
             background: rgba(34, 197, 94, 0.15);
             color: #4ade80;
             font-weight: 900;
-            font-size: 15px;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
         }
 
         .activation-card {
@@ -319,66 +319,40 @@
             text-align: center;
             max-width: 400px;
             width: 100%;
-            box-shadow: 0 0 35px rgba(251, 191, 36, 0.7), inset 0 0 20px rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 35px rgba(251, 191, 36, 0.7);
             animation: modal-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         @keyframes modal-appear {
-            0% { transform: scale(0.7); opacity: 1; }
+            0% { transform: scale(0.7); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .reward-icon {
-            font-size: 52px;
-            margin-bottom: 8px;
-            filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8));
-        }
+        .reward-icon { font-size: 50px; margin-bottom: 6px; }
         .reward-badge-title {
-            color: #ffd700;
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            margin: 0 0 8px 0;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+            color: #ffd700; font-size: 21px; font-weight: 900; margin: 0 0 6px 0;
         }
         .reward-item-box {
             background: rgba(88, 28, 135, 0.5);
             border: 2px dashed #ffd700;
             border-radius: 12px;
-            padding: 14px;
-            margin: 14px 0;
+            padding: 12px;
+            margin: 12px 0;
         }
-        .reward-item-name {
-            font-size: 19px;
-            font-weight: 900;
-            color: #fef08a;
-            letter-spacing: 1px;
-        }
-        .reward-tip {
-            font-size: 12px;
-            color: #cbd5e1;
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
+        .reward-item-name { font-size: 18px; font-weight: 900; color: #fef08a; }
+        .reward-tip { font-size: 12px; color: #cbd5e1; margin-bottom: 14px; }
         .btn-claim {
             width: 100%;
-            padding: 12px;
+            padding: 11px;
             background: linear-gradient(90deg, #d97706, #fbbf24);
             border: 2px solid #fff;
             border-radius: 8px;
             color: #000;
             font-weight: 900;
-            font-size: 16px;
-            letter-spacing: 1px;
+            font-size: 15px;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
             margin-bottom: 8px;
         }
         .btn-close-modal {
-            background: transparent;
-            border: none;
-            color: #a855f7;
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: underline;
+            background: transparent; border: none; color: #a855f7; font-size: 12px; text-decoration: underline; cursor: pointer;
         }
 
         .hidden { display: none !important; }
@@ -392,7 +366,7 @@
             <div class="sub-title">秘境試煉 ‧ 公會探索</div>
         </div>
 
-        <div id="loading" style="text-align:center; padding: 40px 10px; color:#c084fc; font-size:16px;">
+        <div id="loading" style="text-align:center; padding: 30px 10px; color:#c084fc; font-size:15px;">
             正在感應公會魔力航道...
         </div>
 
@@ -400,15 +374,15 @@
             <div style="font-size:36px; margin-bottom:8px;">📜</div>
             <h2 style="color:#ffd700; margin:0 0 8px;">解鎖魔法公會地圖</h2>
             <p style="font-size: 13px; color: #d8b4fe; margin-bottom:16px;">請輸入聯票專屬 6 碼通關密語：</p>
-            <input type="text" id="activationInput" class="pin-input" style="width:100%; margin-bottom:12px; font-size:18px;" placeholder="例：TEST01" />
+            <input type="text" id="activationInput" class="pin-input" style="width:100%; margin-bottom:12px; font-size:18px;" placeholder="例：TEST04" />
             <button onclick="handleActivation()" class="btn-verify" style="width:100%; padding:12px; font-size:16px;">開啟探索特權</button>
             <div id="activationMsg" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
         </div>
 
         <div id="mapSection" class="hidden">
             <div class="active-code-bar">
-                <span>🎫 當前通關票券：<span id="currentCodeDisplay" class="code-tag">TEST01</span></span>
-                <button class="btn-switch-code" onclick="switchAnotherCode()">➕ 切換/輸入新密語</button>
+                <span>🎫 當前通關票券：<span id="currentCodeDisplay" class="code-tag">TEST04</span></span>
+                <button class="btn-switch-code" onclick="switchAnotherCode()">➕ 切換密語</button>
             </div>
 
             <div class="progress-bar" id="progressBar" onclick="checkAndOpenReward()">
@@ -650,7 +624,7 @@
                 document.getElementById('activationSection').classList.add('hidden');
                 document.getElementById('mapSection').classList.remove('hidden');
                 loadMapData();
-            }, 500);
+            }, 400);
         }
 
         async function loadMapData() {
@@ -679,7 +653,7 @@
                     rewardClaimedAt = null;
                 }
 
-                const stampCount = stamps.length;
+                const stampCount = stampedSet.size;
                 const totalCount = merchantsList.length || 3;
                 const pBar = document.getElementById('progressBar');
 
@@ -772,16 +746,16 @@
                             <input type="password" id="currentPinInput" class="pin-input" placeholder="店員 PIN 碼" maxlength="6">
                             <button onclick="verifyCurrentStore('${m.pin_code}')" class="btn-verify">現場核銷</button>
                         </div>
-                        <div id="verifyMsg" style="margin-top:8px; font-size:13px; font-weight:bold; text-align:center;"></div>
+                        <div id="verifyMsg" style="margin-top:6px; font-size:12.5px; font-weight:bold; text-align:center;"></div>
                     `
                 }
             `;
         }
 
+        // 🌟 現場核銷防呆邏輯
         async function verifyCurrentStore(correctPin) {
             const input = document.getElementById('currentPinInput').value.trim();
             const msg = document.getElementById('verifyMsg');
-            const m = merchantsList.find(item => item.id === selectedMerchantId);
 
             if (input !== correctPin) {
                 msg.innerText = '❌ 核銷密碼錯誤！';
@@ -789,26 +763,35 @@
                 return;
             }
 
-            const res = await fetch(`${API_URL}/user_stamps`, {
-                method: 'POST',
-                headers: apiHeaders,
-                body: JSON.stringify({ 
-                    code: currentCode,
-                    line_user_id: currentUserId,
-                    merchant_id: selectedMerchantId,
-                    merchant_name: m ? m.name : '合作據點'
-                })
-            });
+            msg.innerText = '正在點亮公會印記...';
+            msg.style.color = '#ffd700';
 
-            if (!res.ok) {
-                msg.innerText = '⚠️ 此票券本店已完成核銷！';
-                msg.style.color = '#fbbf24';
-                return;
+            try {
+                const res = await fetch(`${API_URL}/user_stamps`, {
+                    method: 'POST',
+                    headers: apiHeaders,
+                    body: JSON.stringify({ 
+                        code: currentCode,
+                        merchant_id: selectedMerchantId,
+                        line_user_id: currentUserId
+                    })
+                });
+
+                // 若已成功寫入，或先前已核銷過 (409 重複衝突)，皆判定為已蓋章完成
+                if (res.ok || res.status === 409) {
+                    stampedSet.add(selectedMerchantId);
+                    msg.innerText = '✨ 核銷成功，地圖印記已點亮！';
+                    msg.style.color = '#4ade80';
+                    setTimeout(() => loadMapData(), 400);
+                } else {
+                    const err = await res.json();
+                    msg.innerText = '⚠️ 核銷異常：' + (err.message || '請重新整理後再試');
+                    msg.style.color = '#f87171';
+                }
+            } catch (e) {
+                msg.innerText = '❌ 連線異常，請稍後重試';
+                msg.style.color = '#f87171';
             }
-
-            msg.innerText = '✨ 核銷成功，地圖印記已點亮！';
-            msg.style.color = '#4ade80';
-            setTimeout(() => loadMapData(), 500);
         }
 
         function showRewardModal() {
@@ -830,17 +813,17 @@
             const area = document.getElementById('rewardActionArea');
             if (isRewardClaimed) {
                 area.innerHTML = `
-                    <div style="background:rgba(34,197,94,0.18); border:2px dashed #4ade80; color:#4ade80; padding:12px; border-radius:8px; font-weight:bold; font-size:15px; margin-bottom:8px;">
+                    <div style="background:rgba(34,197,94,0.18); border:2px dashed #4ade80; color:#4ade80; padding:10px; border-radius:8px; font-weight:bold; font-size:14px; margin-bottom:8px;">
                         ✅ 本票券已完成實體核銷兌換<br>
-                        <span style="font-size:12px; color:#cbd5e1;">核銷時間：${rewardClaimedAt}</span>
+                        <span style="font-size:11px; color:#cbd5e1;">核銷時間：${rewardClaimedAt}</span>
                     </div>
                 `;
             } else {
                 area.innerHTML = `
-                    <div style="margin-top:8px;">
-                        <input type="password" id="staffRewardPin" class="pin-input" style="width:100%; margin-bottom:8px; font-size:16px; text-align:center;" placeholder="請工作人員輸入核銷 PIN 碼" maxlength="6">
+                    <div style="margin-top:6px;">
+                        <input type="password" id="staffRewardPin" class="pin-input" style="width:100%; margin-bottom:8px; font-size:15px; text-align:center;" placeholder="請工作人員輸入核銷 PIN 碼" maxlength="6">
                         <button class="btn-claim" id="btnClaimReward" onclick="claimRewardStaff()">工作人員確認核銷</button>
-                        <div id="rewardClaimMsg" style="font-size:13px; margin-top:6px; font-weight:bold; text-align:center;"></div>
+                        <div id="rewardClaimMsg" style="font-size:12px; margin-top:5px; font-weight:bold; text-align:center;"></div>
                     </div>
                 `;
             }
@@ -877,19 +860,12 @@
                     })
                 });
 
-                if (!res.ok) {
-                    const err = await res.json();
-                    if (err.code === '23505') {
-                        alert('⚠️ 此通關密語先前已完成核銷領取，不可重複領取！');
-                    } else {
-                        throw new Error('伺服器記錄失敗');
-                    }
+                if (res.ok || res.status === 409) {
+                    alert('🎉 核銷成功！已交付獎品並記錄於後台數據庫。');
                     loadMapData();
-                    return;
+                } else {
+                    throw new Error('伺服器記錄失敗');
                 }
-
-                alert('🎉 核銷成功！已交付獎品並記錄於後台數據庫。');
-                loadMapData();
             } catch (e) {
                 msg.innerText = '❌ 核銷失敗：' + e.message;
                 msg.style.color = '#f87171';
