@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>桿道夫《魔法地圖》探索試煉</title>
+    <title>桿道夫《魔法航海地圖》探索試煉</title>
     <!-- LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,7 +74,7 @@
             cursor: pointer;
         }
 
-        /* 進度條 / 獎勵領取浮動橫幅 */
+        /* 集點進度條 / 獎勵領取浮動橫幅 */
         .progress-bar {
             background: rgba(35, 11, 65, 0.9);
             border: 1px solid var(--purple-border);
@@ -107,23 +107,17 @@
             margin-top: 2px;
         }
 
-        /* 📜 2D 冒險羊皮紙大地圖畫布 📜 */
-        .rpg-map-canvas {
-            width: 100%;
-            height: 420px;
-            background: #edd8b4;
-            background-image: 
-                radial-gradient(circle, rgba(248, 238, 217, 0.96) 0%, rgba(206, 172, 120, 0.98) 100%),
-                repeating-linear-gradient(45deg, rgba(80, 50, 20, 0.03) 0px, rgba(80, 50, 20, 0.03) 2px, transparent 2px, transparent 6px);
-            border: 4px double #5c3514;
-            border-radius: 16px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(92, 53, 20, 0.55);
+        /* 📜 圖二：中世紀復古航海羊皮紙卷軸畫布 📜 */
+        .scroll-map-container {
             position: relative;
-            overflow: hidden;
+            width: 100%;
+            height: 480px;
             margin-bottom: 16px;
+            filter: drop-shadow(0 12px 25px rgba(0, 0, 0, 0.8));
         }
 
-        .map-art-layer {
+        /* 卷軸手繪與地圖向量圖層 */
+        .scroll-svg-layer {
             position: absolute;
             top: 0;
             left: 0;
@@ -132,23 +126,8 @@
             pointer-events: none;
             z-index: 1;
         }
-        .map-trails {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
-        }
-        .trail-path {
-            stroke: #8b3a12;
-            stroke-width: 3.5;
-            stroke-dasharray: 6, 6;
-            fill: none;
-        }
 
-        /* 據點點位 */
+        /* 📍 地圖據點點位 (Marker Pin) */
         .map-node {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -156,25 +135,26 @@
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            z-index: 10;
+            z-index: 15;
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .map-node:active, .map-node.active {
-            transform: translate(-50%, -50%) scale(1.15);
+            transform: translate(-50%, -50%) scale(1.18);
         }
 
+        /* 據點徽章造型 */
         .node-pin {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: radial-gradient(circle, #2d0b4e 0%, #0c0217 100%);
             border: 3px solid #ffd700;
-            box-shadow: 0 0 16px rgba(251, 191, 36, 0.95), 0 4px 10px rgba(0,0,0,0.7);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.95), 0 4px 10px rgba(0,0,0,0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Cinzel', serif;
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 900;
             color: #ffd700;
             transition: 0.3s;
@@ -186,8 +166,9 @@
             box-shadow: 0 0 18px rgba(74, 222, 128, 0.95);
         }
 
+        /* 據點下方標籤 */
         .node-label {
-            background: rgba(18, 5, 34, 0.95);
+            background: rgba(18, 5, 34, 0.94);
             color: #fef08a;
             border: 1px solid #eab308;
             padding: 3px 8px;
@@ -197,13 +178,14 @@
             margin-top: 4px;
             white-space: nowrap;
             box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            letter-spacing: 0.5px;
         }
         .map-node.stamped .node-label {
             border-color: #4ade80;
             color: #86efac;
         }
 
-        /* 據點詳細卷軸 */
+        /* 📜 底部據點詳細資訊卷軸卡片 */
         .detail-card {
             background: #170928;
             border: 2px solid var(--purple-border);
@@ -237,6 +219,7 @@
             line-height: 1.4;
         }
 
+        /* 導航按鈕 */
         .btn-navigation {
             display: flex;
             align-items: center;
@@ -255,6 +238,7 @@
             letter-spacing: 1px;
         }
 
+        /* 核銷區塊 */
         .verify-group {
             display: flex;
             gap: 6px;
@@ -270,6 +254,11 @@
             text-align: center;
             letter-spacing: 3px;
         }
+        .pin-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px #ffd700;
+        }
         .btn-verify {
             flex: 1;
             padding: 10px;
@@ -283,6 +272,7 @@
             box-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
         }
 
+        /* 已蓋章完成狀態 */
         .stamped-banner {
             text-align: center;
             padding: 10px;
@@ -296,6 +286,7 @@
             text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
         }
 
+        /* 啟用卡牌 */
         .activation-card {
             background: #170928;
             border: 2px solid var(--purple-border);
@@ -414,58 +405,172 @@
             <div id="activationMsg" style="margin-top:10px; font-size:13px; font-weight:bold;"></div>
         </div>
 
-        <!-- 2D 探索地圖區 -->
+        <!-- 正式地圖探索世界（圖二古典羊皮紙卷軸風格） -->
         <div id="mapSection" class="hidden">
             <div class="progress-bar" id="progressBar" onclick="checkAndOpenReward()">
                 <div class="progress-text" id="stampCountText">探索進度：已集點 0 / 3 間據點</div>
                 <div class="progress-sub" id="stampSubText">✦ 點擊地圖上的金色圓點，可切換據點導航與現場核銷 ✦</div>
             </div>
 
-            <div class="rpg-map-canvas" id="mapCanvas">
-                <svg class="map-art-layer" viewBox="0 0 400 420" preserveAspectRatio="none">
-                    <g transform="translate(345, 45) scale(0.65)" stroke="#6b3f1e" stroke-width="1.5" fill="none" opacity="0.45">
-                        <circle cx="0" cy="0" r="28" stroke-dasharray="3,3" />
-                        <polygon points="0,-36 6,-10 0,-15 -6,-10" fill="#6b3f1e" />
-                        <polygon points="0,36 6,10 0,15 -6,10" fill="#6b3f1e" />
-                        <polygon points="36,0 10,6 15,0 10,-6" fill="#6b3f1e" />
-                        <polygon points="-36,0 -10,6 -15,0 -10,-6" fill="#6b3f1e" />
-                        <text x="0" y="-40" text-anchor="middle" font-size="12" font-family="'Cinzel', serif" font-weight="bold" fill="#6b3f1e">N</text>
+            <!-- 📜 卷軸式羊皮紙航海大地圖容器 📜 -->
+            <div class="scroll-map-container" id="mapCanvas">
+                <svg class="scroll-svg-layer" viewBox="0 0 420 500" preserveAspectRatio="none">
+                    <defs>
+                        <!-- 羊皮紙底紋漸層 -->
+                        <radialGradient id="parchmentBase" cx="50%" cy="50%" r="55%">
+                            <stop offset="0%" stop-color="#faedd2"/>
+                            <stop offset="65%" stop-color="#eccfa3"/>
+                            <stop offset="100%" stop-color="#cb9d64"/>
+                        </radialGradient>
+                        <!-- 木質軸心漸層 -->
+                        <linearGradient id="woodGradient" x1="0" y1="0" x2="0" y2="100%">
+                            <stop offset="0%" stop-color="#4a250e"/>
+                            <stop offset="40%" stop-color="#844820"/>
+                            <stop offset="70%" stop-color="#5a2d13"/>
+                            <stop offset="100%" stop-color="#2b1206"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- 1. 羊皮紙主體（邊緣撕裂與鋸齒不規則造型） -->
+                    <path d="
+                        M 30,30 
+                        L 55,28 L 70,32 L 120,29 L 140,32 L 200,28 L 220,32 L 280,28 L 310,32 L 360,28 L 390,30
+                        L 392,60 L 387,75 L 392,95 L 385,120 L 393,145 L 386,175 L 393,210 L 385,245 L 392,280 L 386,320 L 393,365 L 387,410 L 392,440 L 390,470
+                        L 360,472 L 340,468 L 280,472 L 250,467 L 190,472 L 150,468 L 90,472 L 60,468 L 30,470
+                        L 28,440 L 33,410 L 27,370 L 34,325 L 28,280 L 33,235 L 27,190 L 34,145 L 28,105 L 33,70 Z"
+                        fill="url(#parchmentBase)" stroke="#532d12" stroke-width="2.5" />
+
+                    <!-- 2. 卷軸頂部木質滾軸 -->
+                    <g id="topRoller">
+                        <rect x="20" y="14" width="380" height="18" rx="6" fill="url(#woodGradient)" stroke="#2b1206" stroke-width="2" />
+                        <ellipse cx="20" cy="23" rx="7" ry="11" fill="#693717" stroke="#2b1206" stroke-width="2"/>
+                        <ellipse cx="400" cy="23" rx="7" ry="11" fill="#693717" stroke="#2b1206" stroke-width="2"/>
+                        <!-- 捲紙陰影 -->
+                        <path d="M 28,30 C 100,24 320,24 392,30" fill="none" stroke="#3d1e0a" stroke-width="3" opacity="0.6"/>
                     </g>
-                    <g stroke="#532d15" stroke-width="1.6" fill="#dfbe8b" opacity="0.8">
-                        <path d="M 230,120 Q 280,105 340,125 L 340,135 L 220,135 Z" fill="#cfa570" />
-                        <rect x="250" y="55" width="60" height="40" rx="2" />
-                        <rect x="238" y="35" width="18" height="60" rx="2" />
-                        <polygon points="247,10 234,35 260,35" fill="#9c2727" stroke="#532d15" />
-                        <rect x="302" y="28" width="22" height="68" rx="2" />
-                        <polygon points="313,2 298,28 328,28" fill="#9c2727" stroke="#532d15" />
-                        <path d="M 272,95 A 8,8 0 0,1 288,95 Z" fill="#4a2612" />
-                        <text x="280" y="112" font-size="10" font-family="'Noto Serif TC', serif" font-weight="900" fill="#6d3917" letter-spacing="1">公會城堡</text>
+
+                    <!-- 3. 卷軸底部木質滾軸 -->
+                    <g id="bottomRoller">
+                        <rect x="20" y="468" width="380" height="18" rx="6" fill="url(#woodGradient)" stroke="#2b1206" stroke-width="2" />
+                        <ellipse cx="20" cy="477" rx="7" ry="11" fill="#693717" stroke="#2b1206" stroke-width="2"/>
+                        <ellipse cx="400" cy="477" rx="7" ry="11" fill="#693717" stroke="#2b1206" stroke-width="2"/>
+                        <!-- 捲紙陰影 -->
+                        <path d="M 28,470 C 100,476 320,476 392,470" fill="none" stroke="#3d1e0a" stroke-width="3" opacity="0.6"/>
                     </g>
-                    <g stroke="#4a2612" stroke-width="1.8" opacity="0.85">
-                        <path d="M 10,380 Q 25,290 85,285 Q 140,280 160,350 L 160,420 L 10,420 Z" fill="#c39a67" />
-                        <path d="M 40,385 C 40,325 90,320 95,385 Z" fill="#180a26" stroke="#33180a" stroke-width="2.5" />
-                        <polygon points="50,335 55,348 60,335" fill="#eedbb9" />
-                        <polygon points="68,332 73,352 78,332" fill="#eedbb9" />
-                        <polygon points="82,336 86,346 90,336" fill="#eedbb9" />
-                        <text x="70" y="405" font-size="10" font-family="'Noto Serif TC', serif" font-weight="900" fill="#582a10" letter-spacing="1">暗影洞穴</text>
+
+                    <!-- 4. 航海羅盤圖騰（左上方大型八芒羅盤，完全還原圖二） -->
+                    <g transform="translate(120, 140)">
+                        <!-- 羅盤外圈刻度環 -->
+                        <circle cx="0" cy="0" r="42" fill="none" stroke="#71421f" stroke-width="1.8"/>
+                        <circle cx="0" cy="0" r="38" fill="none" stroke="#71421f" stroke-width="1" stroke-dasharray="2,2"/>
+                        <circle cx="0" cy="0" r="28" fill="none" stroke="#71421f" stroke-width="1"/>
+                        <!-- 4 主方向尖芒（紅、白相間） -->
+                        <polygon points="0,-52 7,-16 0,-24" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <polygon points="0,-52 -7,-16 0,-24" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="0,52 7,16 0,24" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="0,52 -7,16 0,24" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <polygon points="52,0 16,7 24,0" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <polygon points="52,0 16,-7 24,0" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="-52,0 -16,7 -24,0" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="-52,0 -16,-7 -24,0" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <!-- 4 副方向尖芒 -->
+                        <polygon points="32,-32 12,-4 18,-18" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="32,-32 4,-12 18,-18" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <polygon points="-32,32 -12,4 -18,18" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="-32,32 -4,12 -18,18" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <polygon points="-32,-32 -4,-12 -18,-18" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="-32,-32 -12,-4 -18,-18" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <polygon points="32,32 4,12 18,18" fill="#fdf6e4" stroke="#521512" stroke-width="1"/>
+                        <polygon points="32,32 12,4 18,18" fill="#a8231e" stroke="#521512" stroke-width="1"/>
+                        <!-- 中心圓釘 -->
+                        <circle cx="0" cy="0" r="5" fill="#a8231e" stroke="#2b1206" stroke-width="1.5"/>
+                        <!-- 哥德方位文字 -->
+                        <text x="0" y="-58" text-anchor="middle" font-family="'Cinzel', serif" font-size="14" font-weight="900" fill="#7d1e1a">N</text>
+                        <text x="60" y="5" text-anchor="middle" font-family="'Cinzel', serif" font-size="13" font-weight="900" fill="#7d1e1a">E</text>
+                        <text x="0" y="68" text-anchor="middle" font-family="'Cinzel', serif" font-size="13" font-weight="900" fill="#7d1e1a">S</text>
+                        <text x="-60" y="5" text-anchor="middle" font-family="'Cinzel', serif" font-size="13" font-weight="900" fill="#7d1e1a">W</text>
                     </g>
-                    <g stroke="#6b3f1e" stroke-width="1.2" fill="#d9b685" opacity="0.6">
-                        <polygon points="80,240 120,180 160,240" />
-                        <polygon points="140,245 175,195 210,245" />
-                        <polygon points="30,225 65,175 100,225" />
+
+                    <!-- 5. 中央航海星盤（第二羅盤，圖二中央） -->
+                    <g transform="translate(205, 235)">
+                        <circle cx="0" cy="0" r="26" fill="#eed9b6" stroke="#683917" stroke-width="2.5"/>
+                        <circle cx="0" cy="0" r="21" fill="none" stroke="#683917" stroke-width="1" stroke-dasharray="2,2"/>
+                        <!-- 8 芒指針 -->
+                        <polygon points="0,-24 4,-6 0,-9 -4,-6" fill="#a8231e" />
+                        <polygon points="0,24 4,6 0,9 -4,6" fill="#a8231e" />
+                        <polygon points="24,0 6,4 9,0 6,-4" fill="#a8231e" />
+                        <polygon points="-24,0 -6,4 -9,0 -6,-4" fill="#a8231e" />
+                        <circle cx="0" cy="0" r="4" fill="#fdf6e4" stroke="#683917" stroke-width="1.5"/>
                     </g>
-                    <g stroke="#532d15" stroke-width="1" fill="#784421" opacity="0.6">
-                        <polygon points="145,215 137,235 153,235" />
-                        <polygon points="235,185 227,205 243,205" />
-                        <polygon points="255,195 248,212 262,212" />
+
+                    <!-- 6. 奇幻島嶼輪廓與手繪點狀海岸線（完全還原圖二中央島嶼） -->
+                    <g id="fantasyIsland">
+                        <!-- 海島本體 -->
+                        <path d="
+                            M 180,140
+                            C 210,110 270,100 290,140
+                            C 305,170 315,200 295,245
+                            C 285,270 275,310 240,335
+                            C 220,350 200,380 180,385
+                            C 155,390 145,360 170,330
+                            C 185,310 170,270 140,270
+                            C 110,270 120,240 140,230
+                            C 160,220 160,170 180,140 Z"
+                            fill="#dfbf8f" stroke="#643818" stroke-width="2.5" />
+                        <!-- 海岸線碎石與點狀陰影裝飾 -->
+                        <path d="
+                            M 176,144 C 206,116 264,106 284,144 C 298,172 308,200 289,242 C 279,266 270,304 236,328 C 217,342 198,372 179,377 C 158,381 150,356 172,328"
+                            fill="none" stroke="#552c11" stroke-width="1.2" stroke-dasharray="1,4" opacity="0.8" />
                     </g>
-                    <text x="20" y="30" font-family="'Cinzel', serif" font-size="12" font-weight="900" fill="#6d421e" opacity="0.5" letter-spacing="2">MAP OF ADVENTURE</text>
+
+                    <!-- 7. 圖二背景點綴：山脈、帆船與海浪 -->
+                    <!-- 右上金字塔山脈 -->
+                    <g stroke="#683917" stroke-width="1.4" fill="#cfa572" transform="translate(305, 75) scale(0.85)">
+                        <polygon points="20,5 0,35 40,35" />
+                        <line x1="20" y1="5" x2="24" y2="35" />
+                        <polygon points="45,15 30,40 60,40" />
+                        <line x1="45" y1="15" x2="48" y2="40" />
+                    </g>
+
+                    <!-- 右下三桅大帆船 -->
+                    <g stroke="#552c11" stroke-width="1.4" fill="#eed9b6" transform="translate(290, 360) scale(0.9)">
+                        <!-- 船體 -->
+                        <path d="M 10,45 Q 35,52 65,45 L 60,35 L 15,35 Z" fill="#683917" />
+                        <!-- 主桅杆與鼓風船帆 -->
+                        <line x1="38" y1="35" x2="38" y2="5" stroke-width="2" />
+                        <path d="M 38,10 Q 52,14 38,20 Q 54,25 38,32" fill="#fff9eb" />
+                        <!-- 前桅杆與船帆 -->
+                        <line x1="22" y1="35" x2="22" y2="12" stroke-width="1.5" />
+                        <path d="M 22,15 Q 32,19 22,24 Q 33,28 22,33" fill="#fff9eb" />
+                        <!-- 後桅杆 -->
+                        <line x1="52" y1="35" x2="52" y2="16" stroke-width="1.5" />
+                        <path d="M 52,18 Q 60,22 52,26 Q 61,30 52,34" fill="#fff9eb" />
+                    </g>
+
+                    <!-- 左側單桅小帆船 -->
+                    <g stroke="#552c11" stroke-width="1.2" fill="#683917" transform="translate(70, 225) scale(0.7)">
+                        <path d="M 5,28 Q 20,34 38,28 L 34,22 L 8,22 Z" />
+                        <line x1="22" y1="22" x2="22" y2="4" stroke-width="1.5" />
+                        <path d="M 22,6 Q 34,12 22,20 Z" fill="#fff9eb" />
+                    </g>
+
+                    <!-- 海面海浪漣漪 -->
+                    <g stroke="#683917" stroke-width="1.5" fill="none" opacity="0.65">
+                        <path d="M 90,390 Q 100,382 110,390 Q 120,382 130,390" />
+                        <path d="M 230,410 Q 240,402 250,410 Q 260,402 270,410" />
+                        <path d="M 305,270 Q 315,263 325,270 Q 335,263 345,270" />
+                    </g>
+
+                    <!-- 8. 放射狀航海虛線航道（貫穿地圖並連結 3 個據點） -->
+                    <g stroke="#552c11" stroke-width="1.6" stroke-dasharray="4,4" opacity="0.75">
+                        <line x1="45" y1="80" x2="380" y2="415" />
+                        <line x1="380" y1="100" x2="45" y2="370" />
+                        <!-- 連接 3 間店的探索軌道：幻覺博物館 -> 三拾叁茶飲 -> 女森製作所 -->
+                        <path d="M 125,355 Q 185,260 205,235 T 285,145" stroke="#99231e" stroke-width="2.5" stroke-dasharray="5,5" fill="none"/>
+                    </g>
                 </svg>
 
-                <svg class="map-trails" viewBox="0 0 400 420" preserveAspectRatio="none">
-                    <path class="trail-path" d="M 100,310 Q 150,245 205,210 T 310,105" />
-                </svg>
-
+                <!-- 📍 3 個據點圖釘（動態生成在島嶼航道上） -->
                 <div id="nodesContainer"></div>
             </div>
 
@@ -477,7 +582,7 @@
             </div>
         </div>
 
-        <!-- 🏆 獎勵兌換彈窗 🏆 -->
+        <!-- 🏆 榮譽獎勵彈窗（含工作人員專屬 PIN 碼驗證） 🏆 -->
         <div id="rewardModal" class="modal-overlay hidden">
             <div class="reward-card">
                 <div class="reward-icon">🎁</div>
@@ -490,13 +595,10 @@
                 </div>
 
                 <div class="reward-tip">
-                    請向「桿道夫魔法公會」或合作特約場館工作人員出示此畫面領取實體獎品。
+                    請出示此畫面給「桿道夫魔法公會」或合作特約場館工作人員輸入密碼領取。
                 </div>
 
-                <div id="rewardActionArea">
-                    <button class="btn-claim" id="btnClaimReward" onclick="claimRewardStaff()">工作人員核銷領取</button>
-                    <div id="rewardClaimMsg" style="font-size:13px; margin-top:6px; font-weight:bold;"></div>
-                </div>
+                <div id="rewardActionArea"></div>
 
                 <button class="btn-close-modal" onclick="closeRewardModal()">稍後再出示 (關閉視窗)</button>
             </div>
@@ -509,6 +611,9 @@
         const API_URL = 'https://wsphfkvqquztearorpkd.supabase.co/rest/v1';
         const API_KEY = 'sb_publishable_B9mdwTlyqRCRMPRK4o2Enw_eiUY5vU-';
 
+        // 🌟 工作人員兌換專屬 PIN 碼
+        const REWARD_STAFF_PIN = '8888';
+
         const apiHeaders = {
             'apikey': API_KEY,
             'Authorization': 'Bearer ' + API_KEY,
@@ -517,10 +622,11 @@
 
         const REWARD_NAME = '【初階試煉者：公會專屬檔案夾】';
 
+        // 3 間店家在圖二航海羊皮紙地圖上的精確座標配置
         const NODE_POSITIONS = [
-            { x: 26, y: 74 }, // 據點 1：幻覺博物館
-            { x: 77, y: 25 }, // 據點 2：女森創意製作所
-            { x: 51, y: 50 }  // 據點 3：三拾叁精品茶飲
+            { x: 30, y: 72 }, // 據點 1：幻覺博物館（島嶼西南海灣口）
+            { x: 68, y: 29 }, // 據點 2：女森創意製作所（島嶼東北山脈處）
+            { x: 49, y: 47 }  // 據點 3：三拾叁精品茶飲（中央航海星盤旁）
         ];
 
         let currentUserId = null;
@@ -599,7 +705,7 @@
                 body: JSON.stringify({ is_used: true, line_user_id: currentUserId, activated_at: new Date().toISOString() })
             });
 
-            msg.innerText = '✨ 啟動成功！正在展開秘境地圖...';
+            msg.innerText = '✨ 啟動成功！正在展開航海地圖...';
             msg.style.color = '#4ade80';
 
             setTimeout(() => {
@@ -630,7 +736,6 @@
                 rewardClaimedAt = null;
             }
 
-            // 更新累積進度
             const stampCount = stamps.length;
             const totalCount = merchantsList.length;
             const pBar = document.getElementById('progressBar');
@@ -773,25 +878,38 @@
                 area.innerHTML = `
                     <div style="background:rgba(34,197,94,0.18); border:2px dashed #4ade80; color:#4ade80; padding:12px; border-radius:8px; font-weight:bold; font-size:15px; margin-bottom:8px;">
                         ✅ 已完成實體核銷兌換<br>
-                        <span style="font-size:12px; color:#cbd5e1;">兌換時間：${rewardClaimedAt}</span>
+                        <span style="font-size:12px; color:#cbd5e1;">核銷時間：${rewardClaimedAt}</span>
                     </div>
                 `;
             } else {
                 area.innerHTML = `
-                    <button class="btn-claim" id="btnClaimReward" onclick="claimRewardStaff()">工作人員核銷領取</button>
-                    <div id="rewardClaimMsg" style="font-size:13px; margin-top:6px; font-weight:bold;"></div>
+                    <div style="margin-top:8px;">
+                        <input type="password" id="staffRewardPin" class="pin-input" style="width:100%; margin-bottom:8px; font-size:16px; text-align:center;" placeholder="請工作人員輸入核銷 PIN 碼" maxlength="6">
+                        <button class="btn-claim" id="btnClaimReward" onclick="claimRewardStaff()">工作人員確認核銷</button>
+                        <div id="rewardClaimMsg" style="font-size:13px; margin-top:6px; font-weight:bold; text-align:center;"></div>
+                    </div>
                 `;
             }
         }
 
-        // 工作人員現場點擊核銷並寫入資料庫
+        // 工作人員現場輸入 PIN 碼核銷
         async function claimRewardStaff() {
-            if (!confirm('【工作人員核銷確認】\n請確認已現場交付「公會專屬檔案夾」給冒險者？')) {
+            const pinInput = document.getElementById('staffRewardPin').value.trim();
+            const msg = document.getElementById('rewardClaimMsg');
+
+            if (!pinInput) {
+                msg.innerText = '請輸入工作人員核銷碼';
+                msg.style.color = '#f87171';
+                return;
+            }
+
+            if (pinInput !== REWARD_STAFF_PIN) {
+                msg.innerText = '❌ 工作人員核銷密碼錯誤！';
+                msg.style.color = '#f87171';
                 return;
             }
 
             const btn = document.getElementById('btnClaimReward');
-            const msg = document.getElementById('rewardClaimMsg');
             btn.disabled = true;
             btn.innerText = '正在寫入公會兌換名冊...';
 
@@ -808,7 +926,7 @@
                 if (!res.ok) {
                     const err = await res.json();
                     if (err.code === '23505') {
-                        alert('⚠️ 此帳號先前已完成核銷領取，不可重複領取！');
+                        alert('⚠️ 此冒險者先前已完成核銷領取，不可重複領取！');
                     } else {
                         throw new Error('伺服器記錄失敗');
                     }
@@ -816,17 +934,17 @@
                     return;
                 }
 
-                alert('🎉 核銷成功！已記錄於公會兌換數據庫。');
+                alert('🎉 核銷成功！已交付獎品並記錄於後台數據庫。');
                 loadMapData();
             } catch (e) {
                 msg.innerText = '❌ 核銷失敗：' + e.message;
                 msg.style.color = '#f87171';
                 btn.disabled = false;
-                btn.innerText = '工作人員核銷領取';
+                btn.innerText = '工作人員確認核銷';
             }
         }
 
-        // 重新測試
+        // 重新測試按鈕
         function resetTestState() {
             if (confirm('確定要重設測試狀態，重新體驗輸入通關密語嗎？')) {
                 localStorage.removeItem('gandalf_liff_uid');
