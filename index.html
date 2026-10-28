@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>桿道夫《魔法地圖》</title>
-    <!-- 引入 LINE LIFF SDK 與 Supabase SDK -->
+    <!-- LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 16px; margin: 0; background-color: #0f172a; color: #f8fafc; }
         .container { max-width: 480px; margin: auto; }
@@ -18,17 +17,23 @@
         .hidden { display: none; }
         .stamp-badge { display: inline-block; background: #22c55e; color: #000; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-top: 6px; }
         .user-tag { font-size: 12px; color: #94a3b8; word-break: break-all; margin-bottom: 12px; }
+        .error-box { background: #451a1a; border: 1px solid #ef4444; color: #fca5a5; padding: 10px; border-radius: 8px; font-size: 13px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>✨ 桿道夫魔法地圖</h2>
-        <div id="loading" class="card">正在連線魔法公會伺服器...</div>
+        
+        <!-- 連線提示狀態 -->
+        <div id="loading" class="card">
+            <span id="loadingText">正在連線魔法公會伺服器...</span>
+            <div id="errorBox" class="error-box hidden"></div>
+        </div>
 
         <!-- 步驟 1：啟用碼輸入頁面 -->
         <div id="activationSection" class="card hidden">
             <h3>📜 啟用你的冒險地圖</h3>
-            <p>請輸入票券上的 6 碼啟用碼：</p>
+            <p style="font-size:14px; color:#cbd5e1;">請輸入票券上的 6 碼啟用碼：</p>
             <input type="text" id="activationInput" placeholder="例：TEST01" />
             <button onclick="handleActivation()">驗證並啟用</button>
             <p id="activationMsg" style="margin-top:10px;"></p>
@@ -37,66 +42,93 @@
         <!-- 步驟 2：合作店家與集點清單 -->
         <div id="mapSection" class="card hidden">
             <h3>🗺️ 合作探索據點</h3>
-            <div class="user-tag">冒險者識別碼：<span id="userIdText"></span></div>
+            <div class="user-tag">冒險者代碼：<span id="userIdText"></span></div>
             <div id="merchantContainer"></div>
         </div>
     </div>
 
     <script>
-        const LIFF_ID = '2012258408-yrd0t2GN';
-        const SUPABASE_URL = 'https://wsphfkvqquztearorpkd.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_B9mdwTlyqRCRMPRK4o2Enw_eiUY5vU-';
+        // 全域攔截錯誤，直接印在手機畫面上避免白畫面
+        window.onerror = function(msg, url, line) {
+            showError('腳本執行錯誤：' + msg + ' (第 ' + line + ' 行)');
+        };
 
-        // 修正連線實例變數，避免命名衝突
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const LIFF_ID = '2012258408-yrd0t2GN';
+        const API_URL = 'https://wsphfkvqquztearorpkd.supabase.co/rest/v1';
+        const API_KEY = 'sb_publishable_B9mdwTlyqRCRMPRK4o2Enw_eiUY5vU-';
+
+        const apiHeaders = {
+            'apikey': API_KEY,
+            'Authorization': 'Bearer ' + API_KEY,
+            'Content-Type': 'application/json'
+        };
+
         let currentUserId = null;
 
-        async function initApp() {
-            const loadingEl = document.getElementById('loading');
-            try {
-                // 優先嘗試 LIFF 登入辨識
-                if (window.liff) {
-                    await liff.init({ liffId: LIFF_ID });
-                    if (liff.isLoggedIn()) {
-                        const profile = await liff.getProfile();
-                        currentUserId = profile.userId;
-                    } else if (liff.isInClient()) {
-                        liff.login();
-                        return;
-                    } else {
-                        currentUserId = 'TEST_USER_' + Math.floor(1000 + Math.random() * 9000);
-                    }
-                } else {
-                    currentUserId = 'TEST_USER_' + Math.floor(1000 + Math.random() * 9000);
-                }
-
-                document.getElementById('userIdText').innerText = currentUserId;
-                await checkActivationStatus();
-            } catch (err) {
-                console.error(err);
-                loadingEl.innerText = '連線失敗：' + (err.message || '請確認網路');
-                loadingEl.style.color = '#ef4444';
+        function showError(msg) {
+            const box = document.getElementById('errorBox');
+            if (box) {
+                box.classList.remove('hidden');
+                box.innerText = msg;
             }
         }
 
-        async function checkActivationStatus() {
+        async function initApp() {
             try {
-                const { data, error } = await db
-                    .from('activation_codes')
-                    .select('*')
-                    .eq('line_user_id', currentUserId)
-                    .maybeSingle();
+                // 1. 識別使用者（LIFF 或 測試環境）
+                let isLiffReady = false;
+                if (window.liff) {
+                    try {
+                        await Promise.race([
+                            liff.init({ liffId: LIFF_ID }),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500))
+                        ]);
+                        if (liff.isLoggedIn()) {
+                            const profile = await liff.getProfile();
+                            currentUserId = profile.userId;
+                            isLiffReady = true;
+                        } else if (liff.isInClient()) {
+                            liff.login();
+                            return;
+                        }
+                    } catch (e) {
+                        // 若不是在 LINE 開啟或逾時，進入本機測試模式
+                    }
+                }
 
+                if (!isLiffReady) {
+                    // 電腦測試時固定使用者 ID，重新整理不會跳掉
+                    let savedId = localStorage.getItem('gandalf_test_uid');
+                    if (!savedId) {
+                        savedId = 'TEST_USER_' + Math.floor(1000 + Math.random() * 9000);
+                        localStorage.setItem('gandalf_test_uid', savedId);
+                    }
+                    currentUserId = savedId;
+                }
+
+                document.getElementById('userIdText').innerText = currentUserId;
+
+                // 2. 檢查使用者是否已啟用
+                document.getElementById('loadingText').innerText = '正在檢查公會資格...';
+                const checkRes = await fetch(`${API_URL}/activation_codes?line_user_id=eq.${currentUserId}&select=*`, {
+                    headers: apiHeaders
+                });
+
+                if (!checkRes.ok) {
+                    throw new Error('資料庫連線失敗：' + checkRes.statusText);
+                }
+
+                const activatedList = await checkRes.json();
                 document.getElementById('loading').classList.add('hidden');
 
-                if (data && data.is_used) {
+                if (activatedList && activatedList.length > 0 && activatedList[0].is_used) {
                     document.getElementById('mapSection').classList.remove('hidden');
                     loadMerchants();
                 } else {
                     document.getElementById('activationSection').classList.remove('hidden');
                 }
-            } catch (e) {
-                document.getElementById('loading').innerText = '載入狀態異常：' + e.message;
+            } catch (err) {
+                showError('連線錯誤：' + (err.message || err));
             }
         }
 
@@ -110,82 +142,96 @@
                 return;
             }
 
-            msg.innerText = '驗證中...';
+            msg.innerText = '驗證啟用碼中...';
             msg.style.color = '#cbd5e1';
 
-            const { data, error } = await db
-                .from('activation_codes')
-                .select('*')
-                .eq('code', code)
-                .maybeSingle();
+            try {
+                const res = await fetch(`${API_URL}/activation_codes?code=eq.${code}&select=*`, {
+                    headers: apiHeaders
+                });
+                const data = await res.json();
 
-            if (error || !data) {
-                msg.innerText = '❌ 查無此啟用碼，請確認後重試。';
+                if (!data || data.length === 0) {
+                    msg.innerText = '❌ 查無此啟用碼，請確認後重試。';
+                    msg.style.color = '#ef4444';
+                    return;
+                }
+
+                if (data[0].is_used) {
+                    msg.innerText = '❌ 此啟用碼已被其他冒險者使用。';
+                    msg.style.color = '#ef4444';
+                    return;
+                }
+
+                // 更新資料庫
+                const updateRes = await fetch(`${API_URL}/activation_codes?code=eq.${code}`, {
+                    method: 'PATCH',
+                    headers: apiHeaders,
+                    body: JSON.stringify({
+                        is_used: true,
+                        line_user_id: currentUserId,
+                        activated_at: new Date().toISOString()
+                    })
+                });
+
+                if (!updateRes.ok) throw new Error('更新失敗');
+
+                msg.innerText = '✅ 啟用成功！正在前往地圖...';
+                msg.style.color = '#22c55e';
+
+                setTimeout(() => {
+                    document.getElementById('activationSection').classList.add('hidden');
+                    document.getElementById('mapSection').classList.remove('hidden');
+                    loadMerchants();
+                }, 500);
+
+            } catch (e) {
+                msg.innerText = '❌ 啟用失敗：' + e.message;
                 msg.style.color = '#ef4444';
-                return;
             }
-
-            if (data.is_used) {
-                msg.innerText = '❌ 此啟用碼已於其他帳號啟用。';
-                msg.style.color = '#ef4444';
-                return;
-            }
-
-            const { error: updateError } = await db
-                .from('activation_codes')
-                .update({ is_used: true, line_user_id: currentUserId, activated_at: new Date() })
-                .eq('code', code);
-
-            if (updateError) {
-                msg.innerText = '❌ 啟用失敗：' + updateError.message;
-                msg.style.color = '#ef4444';
-                return;
-            }
-
-            msg.innerText = '✅ 啟用成功！正在加載據點...';
-            msg.style.color = '#22c55e';
-
-            setTimeout(() => {
-                document.getElementById('activationSection').classList.add('hidden');
-                document.getElementById('mapSection').classList.remove('hidden');
-                loadMerchants();
-            }, 500);
         }
 
         async function loadMerchants() {
             const container = document.getElementById('merchantContainer');
-            container.innerHTML = '<p>讀取據點資料中...</p>';
+            container.innerHTML = '<p style="color:#94a3b8;">讀取據點資料中...</p>';
 
-            const [{ data: merchants }, { data: stamps }] = await Promise.all([
-                db.from('merchants').select('*'),
-                db.from('user_stamps').select('merchant_id').eq('line_user_id', currentUserId)
-            ]);
+            try {
+                const [mRes, sRes] = await Promise.all([
+                    fetch(`${API_URL}/merchants?select=*`, { headers: apiHeaders }),
+                    fetch(`${API_URL}/user_stamps?line_user_id=eq.${currentUserId}&select=merchant_id`, { headers: apiHeaders })
+                ]);
 
-            const stampedSet = new Set((stamps || []).map(s => s.merchant_id));
-            container.innerHTML = '';
+                const merchants = await mRes.json();
+                const stamps = await sRes.json();
+                const stampedSet = new Set((stamps || []).map(s => s.merchant_id));
 
-            (merchants || []).forEach(m => {
-                const isStamped = stampedSet.has(m.id);
-                const item = document.createElement('div');
-                item.className = 'card';
-                item.style.background = '#334155';
-                item.innerHTML = `
-                    <h4>${m.name}</h4>
-                    <p style="font-size:14px; margin: 4px 0;">優惠：${m.discount_info}</p>
-                    <p style="font-size:12px; color:#cbd5e1; margin: 4px 0;">地點：${m.address || '無'}</p>
-                    ${isStamped 
-                        ? `<div class="stamp-badge">🌟 已核銷集點</div>`
-                        : `
-                            <div style="margin-top:10px;">
-                                <input type="password" id="pin_${m.id}" placeholder="店家核銷 PIN 碼" maxlength="6" style="margin-bottom:6px;">
-                                <button onclick="verifyStorePin(${m.id}, '${m.pin_code}')">現場核銷</button>
-                                <div id="stampMsg_${m.id}" style="margin-top:6px; font-size:14px;"></div>
-                            </div>
-                        `
-                    }
-                `;
-                container.appendChild(item);
-            });
+                container.innerHTML = '';
+
+                merchants.forEach(m => {
+                    const isStamped = stampedSet.has(m.id);
+                    const item = document.createElement('div');
+                    item.className = 'card';
+                    item.style.background = '#334155';
+                    item.innerHTML = `
+                        <h4>${m.name}</h4>
+                        <p style="font-size:14px; margin: 4px 0;">優惠：${m.discount_info}</p>
+                        <p style="font-size:12px; color:#cbd5e1; margin: 4px 0;">地點：${m.address || '無'}</p>
+                        ${isStamped 
+                            ? `<div class="stamp-badge">🌟 已核銷集點</div>`
+                            : `
+                                <div style="margin-top:10px;">
+                                    <input type="password" id="pin_${m.id}" placeholder="店家核銷 PIN 碼" maxlength="6" style="margin-bottom:6px;">
+                                    <button onclick="verifyStorePin(${m.id}, '${m.pin_code}')">現場核銷</button>
+                                    <div id="stampMsg_${m.id}" style="margin-top:6px; font-size:14px;"></div>
+                                </div>
+                            `
+                        }
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (e) {
+                container.innerHTML = '<p style="color:#ef4444;">載入據點失敗：' + e.message + '</p>';
+            }
         }
 
         async function verifyStorePin(merchantId, correctPin) {
@@ -198,22 +244,37 @@
                 return;
             }
 
-            const { error } = await db
-                .from('user_stamps')
-                .insert([{ line_user_id: currentUserId, merchant_id: merchantId }]);
+            try {
+                const res = await fetch(`${API_URL}/user_stamps`, {
+                    method: 'POST',
+                    headers: apiHeaders,
+                    body: JSON.stringify({
+                        line_user_id: currentUserId,
+                        merchant_id: merchantId
+                    })
+                });
 
-            if (error) {
-                msg.innerText = '❌ 紀錄寫入失敗，請重試。';
+                if (!res.ok) {
+                    const errData = await res.json();
+                    if (errData.code === '23505') {
+                        msg.innerText = '⚠️ 本店已完成集點！';
+                    } else {
+                        throw new Error('伺服器拒絕寫入');
+                    }
+                    msg.style.color = '#f59e0b';
+                    return;
+                }
+
+                msg.innerText = '✅ 核銷成功！';
+                msg.style.color = '#22c55e';
+                setTimeout(() => loadMerchants(), 500);
+            } catch (e) {
+                msg.innerText = '❌ 核銷失敗：' + e.message;
                 msg.style.color = '#ef4444';
-                return;
             }
-
-            msg.innerText = '✅ 核銷成功！';
-            msg.style.color = '#22c55e';
-            setTimeout(() => loadMerchants(), 500);
         }
 
-        window.addEventListener('DOMContentLoaded', initApp);
+        window.addEventListener('load', initApp);
     </script>
 </body>
 </html>
